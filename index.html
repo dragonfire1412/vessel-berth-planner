@@ -196,6 +196,7 @@ body.dark .scard.accent .sval{color:var(--accent);}
 .timeline-wrap{
   background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
   box-shadow:var(--shadow-1);overflow:hidden;
+  scroll-margin-top:calc(50vh - 120px);
 }
 .timeline-scroll{
   display:flex;overflow:auto;max-height:82vh;min-height:620px;position:relative;
@@ -1701,6 +1702,9 @@ function jumpToFreeWindowOnTimeline(term,start,end){
         const targetLeft=scroll.scrollLeft+(tr.left-sr.left);
         const desired=Math.max(0,targetLeft-Math.max(70,(sr.width-tr.width)/2));
         scroll.scrollTo({left:desired,behavior:"smooth"});
+        // Also move the page so the selected Free Window is centered vertically on screen.
+        const pageTargetY=tr.top + tr.height/2 - window.innerHeight/2;
+        window.scrollBy({top:pageTargetY,behavior:"smooth"});
         setTimeout(()=>target.classList.remove("focused-window"),2200);
       }
     });
