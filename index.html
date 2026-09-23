@@ -1591,6 +1591,11 @@ function jumpToVesselOnTimeline(v){
       const desired=Math.max(0,targetLeft-Math.max(70,(sr.width-targetWidth)/2));
       scroll.scrollTo({left:desired,behavior:"smooth"});
 
+      // Also move the page vertically so the selected vessel is centered on screen,
+      // matching the Barge Planning jump behavior.
+      const pageTargetY=er.top + er.height/2 - window.innerHeight/2;
+      window.scrollBy({top:pageTargetY,behavior:"smooth"});
+
       setTimeout(()=>{
         target?.classList.remove("focused-vessel");
         label?.classList.remove("focused-vessel-label");
