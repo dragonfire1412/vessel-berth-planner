@@ -2234,7 +2234,17 @@ async function runImageOCR(file, overlay, preserveRecords=null, preserveEdits=nu
         refreshValidation();
         status.textContent=fx.changes?`Đã tự sửa ${fx.changes} lỗi định dạng an toàn. Kiểm tra lại các lỗi còn lại.`:"Không có lỗi định dạng an toàn nào có thể tự sửa. Các lỗi còn lại cần sửa nội dung.";
       };
-      applyBtn.disabled=!v.total || v.errorRows>0;
+      applyBtn.disabled=!v.total;
+      const warning=overlay.querySelector("#ocrImportWarning");
+      const cb=overlay.querySelector("#ocrImportAnyway");
+      if(warning && cb){
+        cb.checked=false;
+        warning.classList.add("hidden");
+        const n=v.errorRows||0;
+        overlay.querySelector("#ocrImportWarningText").textContent=
+          n ? `Hiện vẫn còn ${n} dòng có lỗi bắt buộc. Bạn vẫn muốn Import chứ? Tick vào ô này để xác nhận và bỏ qua các lỗi đó.`
+            : "";
+      }
     };
 
     previewRecordsTable(records,resultMount,refreshValidation);
@@ -2312,6 +2322,12 @@ function openImportModal(){
         </div>
       </div>
       <div id="ocrValidation" class="validation-summary"></div>
+      <div id="ocrImportWarning" class="validation-summary hidden" style="margin-top:10px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="ocrImportAnyway" style="margin-top:3px;">
+          <span id="ocrImportWarningText"></span>
+        </label>
+      </div>
       <div id="ocrResultMount"></div>
       <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end;flex-wrap:wrap;">
         <button class="btn" id="cancelImportBtn">Hủy</button>
@@ -2347,8 +2363,18 @@ function openImportModal(){
         refreshValidation();
         status.textContent=fx.changes?`Đã tự sửa ${fx.changes} lỗi định dạng an toàn. Các lỗi nội dung còn lại hãy sửa trực tiếp trong Preview.`:"Không có lỗi định dạng an toàn nào có thể tự sửa.";
       };
-      applyBtn.disabled=!current.length || v.errorRows>0;
+      applyBtn.disabled=!current.length;
       pendingRecords=current;
+      const warning=overlay.querySelector("#ocrImportWarning");
+      const cb=overlay.querySelector("#ocrImportAnyway");
+      if(warning && cb){
+        cb.checked=false;
+        warning.classList.add("hidden");
+        const n=v.errorRows||0;
+        overlay.querySelector("#ocrImportWarningText").textContent=
+          n ? `Hiện vẫn còn ${n} dòng có lỗi bắt buộc. Bạn vẫn muốn Import chứ? Tick vào ô này để xác nhận và bỏ qua các lỗi đó.`
+            : "";
+      }
     };
     previewRecordsTable(records,previewMount,refreshValidation);
     refreshValidation();
@@ -2413,6 +2439,29 @@ function openImportModal(){
     }
   });
   overlay.querySelector("#clearPasteBtn").onclick=()=>{overlay.querySelector("#pasteArea").value="";previewMount.innerHTML="";};
+  const doImport=()=>{
+    const parsed=state._pendingImportRecords||pendingRecords;
+    if(!parsed||!parsed.length){
+      status.textContent="Chưa có dữ liệu để import.";
+      return;
+    }
+
+    // Completely empty rows are safe to ignore.
+    const cleaned=parsed.filter(r=>[
+      r.vessel,r.exvoy,r.arrivalRaw,r.departureRaw,r.service,r.icdCot,
+      r.terminalCot,r.ter,r.tonBai,r.donePlan,r.remark
+    ].some(v=>String(v??"").trim()!==""));
+
+    state.data=cleaned;
+    saveToStorage(state.data);
+    delete state._pendingImportRecords;
+    delete window.__VBP_OCR_MANUAL_EDITS;
+    overlay.remove();
+    state.weekStart=getMonday(new Date());
+    state.terminal="ALL";
+    renderAll();
+  };
+
   applyBtn.onclick=()=>{
     const parsed=state._pendingImportRecords||pendingRecords;
     if(!parsed||!parsed.length){
@@ -2421,20 +2470,24 @@ function openImportModal(){
     }
     const check=validateRecords(parsed);
     if(check.errorRows>0){
-      applyBtn.disabled=true;
-      status.className="ocr-status error";
-      status.textContent="Còn lỗi bắt buộc. Sửa các ô đỏ trong Preview rồi bấm Confirm & Import.";
-      overlay.querySelector("#ocrValidation")?.scrollIntoView({behavior:"smooth",block:"center"});
+      const warning=overlay.querySelector("#ocrImportWarning");
+      const cb=overlay.querySelector("#ocrImportAnyway");
+      const textEl=overlay.querySelector("#ocrImportWarningText");
+      if(warning && cb){
+        textEl.textContent=`Hiện vẫn còn ${check.errorRows} dòng có lỗi bắt buộc. Bạn vẫn muốn Import chứ? Tick vào ô này để xác nhận và bỏ qua các lỗi đó.`;
+        warning.classList.remove("hidden");
+        cb.checked=false;
+        warning.scrollIntoView({behavior:"smooth",block:"center"});
+      }
       return;
     }
-    state.data=parsed;
-    saveToStorage(state.data);
-    delete state._pendingImportRecords;
-    overlay.remove();
-    state.weekStart=getMonday(new Date());
-    state.terminal="ALL";
-    renderAll();
+    doImport();
   };
+
+  overlay.querySelector("#ocrImportAnyway").addEventListener("change",e=>{
+    if(!e.target.checked) return;
+    doImport();
+  });
   const close=()=>{delete state._pendingImportRecords;delete window.__VBP_OCR_MANUAL_EDITS;overlay.remove();};
   overlay.querySelector(".modal-close").onclick=close;
   overlay.querySelector("#cancelImportBtn").onclick=close;
