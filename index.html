@@ -315,6 +315,17 @@ body.dark .tl-day-label{background:var(--navy-tint);}
   cursor:default;border:1px dashed var(--free-between-border);background:var(--free-between-bg);
 }
 .free-window.edge{border:1px dashed var(--free-edge-border);background:var(--free-edge-bg);}
+.free-window.focused-window{
+  outline:3px solid var(--accent);
+  outline-offset:2px;
+  box-shadow:0 0 0 6px rgba(14,143,140,.18),0 0 18px rgba(14,143,140,.32);
+  z-index:6;
+  animation:fwFocusPulse .8s ease-in-out 2;
+}
+@keyframes fwFocusPulse{
+  0%,100%{filter:brightness(1);}
+  50%{filter:brightness(1.18);}
+}
 .free-window .fw-label{font-size:11px;font-weight:800;color:var(--accent-deep);letter-spacing:.3px;text-transform:uppercase;}
 .free-window.edge .fw-label{color:var(--text-muted);}
 .free-window .fw-dur{font-size:11px;font-family:var(--font-mono);color:var(--text-muted);}
@@ -1593,12 +1604,50 @@ function renderBargePlanning(){
         <button id="viewOnTimelineBtn">Xem trên timeline</button>
       </div>`;
     document.getElementById("viewOnTimelineBtn").onclick = ()=>{
+      // Jump to the exact Free Window that generated this planning window.
+      // The buffer changes the usable barge window, but the Timeline still
+      // displays the underlying vessel-to-vessel Free Window.
       state.terminal = upcoming.term;
       renderAll();
-      const scroll = document.getElementById("timelineScroll");
+
       requestAnimationFrame(()=>{
-        const x = timeToX(upcoming.bufStart, state.weekStart);
-        scroll.scrollTo({left: Math.max(0,x-100), behavior:"smooth"});
+        requestAnimationFrame(()=>{
+          const scroll = document.getElementById("timelineScroll");
+          if(!scroll) return;
+
+          const startIso = upcoming.start?.toISOString?.();
+          const endIso = upcoming.end?.toISOString?.();
+          let target = null;
+
+          // Match the exact source Free Window by ISO start/end.
+          if(startIso && endIso){
+            target = [...scroll.querySelectorAll(".free-window")].find(el =>
+              el.dataset.start === startIso && el.dataset.end === endIso
+            );
+          }
+          // Fallback: match the closest Free Window by its start time.
+          if(!target && upcoming.start){
+            const wanted = upcoming.start.getTime();
+            target = [...scroll.querySelectorAll(".free-window")]
+              .sort((a,b)=>Math.abs(new Date(a.dataset.start).getTime()-wanted)-Math.abs(new Date(b.dataset.start).getTime()-wanted))[0] || null;
+          }
+
+          if(target){
+            target.classList.add("focused-window");
+            const sr = scroll.getBoundingClientRect();
+            const tr = target.getBoundingClientRect();
+            const targetLeft = scroll.scrollLeft + (tr.left - sr.left);
+            const targetWidth = tr.width || 0;
+            const desired = Math.max(0, targetLeft - Math.max(70, (sr.width-targetWidth)/2));
+            scroll.scrollTo({left:desired, behavior:"smooth"});
+            setTimeout(()=>target.classList.remove("focused-window"),2200);
+          }else{
+            // Last-resort fallback when the Free Window is filtered out.
+            const x = timeToX(upcoming.start || upcoming.bufStart, state.weekStart);
+            const leftOffset = document.querySelector(".tl-left")?.offsetWidth || 285;
+            scroll.scrollTo({left:Math.max(0,leftOffset+x-100), behavior:"smooth"});
+          }
+        });
       });
     };
   } else {
