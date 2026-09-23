@@ -676,19 +676,22 @@ footer li{margin-bottom:3px;}
         hoặc chuẩn hóa ngày giờ, không tự đoán nội dung bị OCR sai.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 12 — Confirm &amp; Import:</b> lỗi bắt buộc phải được sửa trước khi nút Confirm &amp; Import được bật.
-        Cảnh báo (warning) được chỉ rõ theo dòng/ô để kiểm tra. App kiểm tra tối thiểu: thiếu Vessel, thiếu TER,
-        Arrival/Departure không hợp lệ, Departure sớm hơn Arrival và bản ghi có khả năng bị trùng.
+        <b>Bước 12 — Sửa lỗi và Confirm &amp; Import:</b> lỗi/cảnh báo được hiển thị ngay trên bảng Preview và chỉ rõ dòng/ô cần kiểm tra.
+        Có thể sửa trực tiếp từng ô rồi hệ thống sẽ kiểm tra lại dữ liệu. Nếu còn lỗi, vẫn có thể bấm <b>Confirm &amp; Import</b>;
+        app sẽ hiện hộp thoại hỏi lại số dòng lỗi và cho người dùng chọn <b>Đóng</b> để sửa tiếp hoặc <b>Xác nhận</b> để Import.
+        Vì có trường hợp dòng trống hoặc dữ liệu người dùng chủ động bỏ qua, hệ thống không tự quyết định thay người dùng.
       </li>
       <li style="margin-bottom:7px;">
         <b>Bước 13 — Data Check:</b> nút biểu tượng ✓ ở góc trên dùng để kiểm tra toàn bộ dữ liệu hiện tại
         và xem danh sách lỗi/cảnh báo theo từng dòng.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 14 — Xuất dữ liệu:</b> <b>Xuất dữ liệu (CSV)</b> xuất dữ liệu của tuần đang xem theo terminal đang chọn;
-        <b>Xuất Excel</b> xuất bảng dữ liệu có các trường lịch tàu; <b>Xuất Free Windows (CSV)</b> xuất danh sách
-        Free Window; <b>Xuất biểu đồ Excel</b> tạo bảng Gantt 7 ngày với cột TERMINAL / VESSEL / EXVOY và các mốc
-        thời gian 2 giờ.
+        <b>Bước 14 — Xuất dữ liệu:</b> có 3 lựa chọn chính:
+        <b>Xuất Free Windows</b> tạo file Excel riêng cho các khoảng trống theo lịch tàu, gồm Terminal, loại khoảng trống,
+        thời gian bắt đầu/kết thúc và số giờ; <b>Xuất Data Vessel</b> tạo file Excel dữ liệu tàu với các trường VESSEL, EXVOY,
+        Arrival, Departure, Service, COT, TER, TỒN BÃI, DONE/PLAN và Remark; <b>Xuất biểu đồ Excel</b> tạo file Gantt 7 ngày
+        theo Timeline, có TERMINAL / VESSEL / EXVOY, các mốc 2 giờ, màu tàu và Free Window. Các file Excel được định dạng
+        để dễ đọc, lọc, in hoặc gửi cho người khác.
       </li>
       <li style="margin-bottom:7px;">
         <b>Bước 15 — Lưu dữ liệu:</b> dữ liệu được lưu trong <b>localStorage của trình duyệt</b>, nên refresh trang
@@ -704,7 +707,7 @@ footer li{margin-bottom:3px;}
       <li><b>Berth Duration:</b> Departure − Arrival.</li>
       <li><b>Overlap:</b> hai hoặc nhiều khoảng Arrival → Departure tại cùng terminal bị chồng thời gian.</li>
       <li><b>Free Window:</b> khoảng không có tàu theo lịch đã nhập; không đồng nghĩa với berth đã được xác nhận cho sà lan.</li>
-      <li><b>Buffer:</b> phần thời gian an toàn được trừ ở <b>cả đầu và cuối</b> Free Window để tạo planning window.</li>
+      <li><b>Buffer:</b> số giờ được trừ ở <b>cả đầu và cuối</b> Free Window. Ví dụ Free Window 10h và Buffer 1h → planning window còn 8h. Nếu Buffer làm khoảng trống không còn dương, khoảng đó không được đưa vào Barge Planning.</li>
       <li><b>NOW:</b> đường đỏ chỉ vị trí thời gian hiện tại của máy trên Timeline.</li>
     </ul>
 
@@ -717,9 +720,10 @@ footer li{margin-bottom:3px;}
       <li>Free Window gồm Week Edge và Between Vessels; Available Windows có bộ lọc thời lượng tối thiểu.</li>
       <li>Barge Planning có chọn terminal, thời lượng tối thiểu, Buffer và nút xem khoảng trống trên Timeline.</li>
       <li>Tooltip khi hover và cửa sổ chi tiết khi click tàu.</li>
-      <li>Import ảnh bằng OCR, OCR lại từ ảnh gốc, Preview/Edit trước khi Import, kiểm tra lỗi/cảnh báo và tự sửa định dạng an toàn.</li>
-      <li>Import XLSX/XLS/CSV và dán dữ liệu từ Excel/CSV.</li>
-      <li>Data Check, lưu localStorage, xuất CSV, xuất Excel dữ liệu và xuất Gantt Excel 7 ngày.</li>
+      <li>Import ảnh bằng OCR, OCR lại từ ảnh gốc, Preview/Edit trước khi Import, kiểm tra lỗi/cảnh báo và tự sửa định dạng an toàn; có thể xóa ảnh hiện tại bằng nút 🗑️ để chọn ảnh khác.</li>
+      <li>Import XLSX/XLS/CSV và dán dữ liệu từ Excel/CSV; dữ liệu OCR có thể sửa trực tiếp trước khi Import.</li>
+      <li>Confirm &amp; Import không khóa tuyệt đối khi còn lỗi: nếu còn lỗi, hệ thống hỏi lại trước khi Import và người dùng quyết định có tiếp tục hay không.</li>
+      <li>Data Check, lưu localStorage, xuất Free Windows bằng Excel, xuất Data Vessel bằng Excel và xuất Gantt Excel 7 ngày.</li>
     </ul>
   </footer>
 </div>
