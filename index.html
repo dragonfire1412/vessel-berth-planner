@@ -640,116 +640,22 @@ footer li{margin-bottom:3px;}
   </div>
 
   <footer>
-    <h4>Hướng dẫn sử dụng — dành cho người mới</h4>
+    <h4>Hướng dẫn nhanh 🚢</h4>
     <ol style="padding-left:20px;margin:0;">
-      <li style="margin-bottom:7px;">
-        <b>Bước 1 — Nhập dữ liệu trước:</b> bấm <b>Nhập dữ liệu ảnh / Excel</b> để đưa lịch tàu vào app.
-        Có thể upload <b>PNG/JPG/JPEG/WEBP</b>, Ctrl+V ảnh chụp màn hình, chọn <b>XLSX/XLS/CSV</b> hoặc dán bảng copy từ Excel.
-        App có sẵn dữ liệu mẫu để xem thử, nhưng khi muốn lập kế hoạch theo lịch thực tế thì hãy nhập dữ liệu mới trước.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 2 — Kiểm tra Preview trước khi Import:</b> nếu nhập ảnh, app sẽ OCR và hiển thị bảng <b>OCR Result / Import Preview</b>.
-        Kiểm tra Vessel, EXVOY, Arrival at Berth, Departure, Service, COT, TER và các cột còn lại.
-        Có thể sửa trực tiếp từng ô. <b>OCR lại</b> sẽ chạy lại từ ảnh gốc; <b>🗑️ Xóa ảnh</b> cho phép bỏ ảnh hiện tại để chọn/dán ảnh khác.
-        <b>Tự sửa lỗi an toàn</b> chỉ xử lý các lỗi định dạng có thể sửa chắc chắn, không tự đoán nội dung OCR không rõ.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 3 — Confirm &amp; Import:</b> khi đã kiểm tra Preview, bấm <b>Confirm &amp; Import</b> để đưa dữ liệu vào lịch.
-        Nếu vẫn còn lỗi, app không khóa nút; nó sẽ hiện hộp thoại cho biết còn bao nhiêu lỗi và hỏi lại.
-        Chọn <b>Đóng</b> để quay lại sửa hoặc <b>Xác nhận</b> nếu bạn vẫn muốn Import. Điều này hữu ích khi có dòng trống hoặc dữ liệu bạn chủ động bỏ qua.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 4 — Kiểm tra dữ liệu sau khi Import:</b> dùng nút <b>✓ Data Check</b> ở góc trên để kiểm tra toàn bộ dữ liệu hiện tại,
-        xem lỗi/cảnh báo theo từng dòng và xử lý các dữ liệu bất thường trước khi lập kế hoạch.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 5 — Chọn tuần:</b> dùng <b>Tuần trước</b>, <b>Hôm nay</b> hoặc <b>Tuần sau</b>.
-        App tính tuần theo <b>Thứ 2 → Chủ nhật</b>. Nút <b>Hôm nay</b> đưa về tuần chứa ngày hiện tại của máy.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 6 — Chọn terminal:</b> <b>ALL</b> xem tất cả terminal; bấm <b>CLI / GML / PAP / SSIT / TCIT</b>
-        để chỉ xem terminal đó trên <b>Timeline</b>. Danh sách terminal lấy từ cột <b>TER</b> của dữ liệu đã nhập.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 7 — Đọc Timeline:</b> mỗi thanh màu là một tàu. Chiều dài thanh thể hiện khoảng
-        <b>Arrival at Berth → Departure</b>. Nếu tàu bắt đầu trước hoặc kết thúc sau tuần đang xem,
-        thanh được cắt theo biên tuần để hiển thị, còn dữ liệu gốc không bị thay đổi.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 8 — Xem thông tin tàu:</b> rê chuột lên thanh tàu hoặc tên tàu để xem tooltip nhanh.
-        Bấm vào thanh tàu hoặc tên tàu để mở chi tiết: Vessel, EXVOY, Terminal, Arrival, Departure,
-        Service, ICD's COT, Terminal's COT, TỒN BÃI, DONE/PLAN và Remark.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 9 — Kiểm tra tàu bị chồng lịch:</b> khi hai tàu cùng terminal có thời gian berth chồng nhau,
-        app đánh dấu <b>⚠</b> và tính số giờ overlap. Đây là cảnh báo về dữ liệu/lịch; app không tự quyết định tàu nào phải đổi lịch.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 10 — Đọc Free Window:</b> <b>FREE WINDOW</b> là khoảng thời gian terminal không có tàu
-        theo dữ liệu Arrival/Departure. <b>Between vessels</b> là khoảng trống giữa các tàu;
-        <b>Week edge</b> là khoảng trống ở đầu hoặc cuối tuần. Các khoảng tàu chồng nhau được gộp trước khi tính,
-        nên overlap không tạo ra khoảng trống giả.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 11 — Danh sách tàu:</b> tại <b>Vessels / Lịch tàu</b>, chọn terminal và nhập tên tàu vào ô tìm kiếm.
-        Danh sách chỉ hiện các tàu phù hợp trong tuần. Bấm vào một tàu để Timeline tự nhảy tới đúng thanh tàu đó.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 12 — Barge Planning:</b> đây là khu vực duy nhất để xem <b>Free Window / Planning Window</b>.
-        Chọn terminal và thời lượng tối thiểu. <b>Buffer mặc định 0h</b>; nếu chọn Buffer 1h,
-        Free Window 10h sẽ còn <b>8h planning window</b> (trừ 1h ở đầu và 1h ở cuối).
-        Bấm vào planning window để Timeline nhảy tới đúng khoảng trống. Đây chỉ là khoảng trống theo lịch tàu,
-        <b>không phải cam kết cầu bến</b>.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 13 — Zoom:</b> 25% cho toàn bộ 1 tuần; 50–75% cho góc nhìn rộng; 100% khoảng 3 ngày;
-        125–150% để xem chi tiết; 200% để soi sát theo giờ. Có thể kéo thanh cuộn ngang để xem phần thời gian ngoài màn hình.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 14 — Tìm kiếm &amp; sắp xếp:</b> tìm theo Vessel, EXVOY, TER hoặc Service.
-        Sắp xếp theo Arrival, Departure, Vessel, Terminal hoặc Duration. Tìm kiếm làm thay đổi dữ liệu đang hiển thị
-        trong Timeline và các phần tổng hợp liên quan.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 15 — Xuất dữ liệu:</b> có 3 lựa chọn:
-        <b>Xuất Free Windows</b> tạo file Excel các khoảng trống theo lịch tàu;
-        <b>Xuất Data Vessel</b> tạo file Excel dữ liệu tàu;
-        <b>Xuất biểu đồ Excel</b> tạo file Gantt 7 ngày theo Timeline với TERMINAL / VESSEL / EXVOY,
-        mốc 2 giờ, màu tàu và Free Window. Các file Excel được định dạng để dễ đọc, lọc, in hoặc gửi.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 16 — Lưu dữ liệu:</b> dữ liệu được lưu trong <b>localStorage của trình duyệt</b>, nên refresh trang
-        không làm mất dữ liệu trên cùng trình duyệt/thiết bị. Xóa dữ liệu trình duyệt hoặc đổi thiết bị có thể làm dữ liệu local không còn.
-        Nút <b>Xóa dữ liệu</b> sẽ xóa dữ liệu đã lưu và nạp lại dữ liệu mẫu.
-      </li>
+      <li style="margin-bottom:7px;"><b>1. Nhập lịch tàu:</b> bấm <b>Nhập dữ liệu ảnh / Excel</b> → đưa file/ảnh hoặc dán bảng Excel → kiểm tra Preview → <b>Confirm & Import</b>.</li>
+      <li style="margin-bottom:7px;"><b>2. Chọn tuần:</b> dùng <b>Tuần trước / Hôm nay / Tuần sau</b>. Timeline luôn hiển thị <b>Thứ 2 → Chủ nhật</b>.</li>
+      <li style="margin-bottom:7px;"><b>3. Xem tàu:</b> bên trái là <b>Vessels / Lịch tàu</b>. Chọn <b>Terminal</b> và nhập tên tàu vào ô tìm kiếm. <b>Bấm vào tàu → Timeline nhảy ngay tới tàu đó.</b></li>
+      <li style="margin-bottom:7px;"><b>4. Đọc Timeline:</b> mỗi thanh màu là một tàu. <b>Arrival → Departure</b> là thời gian tàu chiếm cầu. Rê chuột để xem nhanh; bấm vào tàu để xem chi tiết.</li>
+      <li style="margin-bottom:7px;"><b>5. Tìm khoảng trống cho sà lan:</b> bên phải là <b>Barge Planning</b>. Chọn Terminal và <b>Min</b> để lọc các Free Window đủ dài.</li>
+      <li style="margin-bottom:7px;"><b>6. Hiểu Buffer:</b> mặc định <b>0h</b>. Nếu chọn <b>Buffer 1h</b>, app chừa 1h ở đầu và 1h ở cuối Free Window. Ví dụ <b>10h → còn 8h Planning Window</b>.</li>
+      <li style="margin-bottom:7px;"><b>7. Nhảy tới khoảng trống:</b> bấm vào Planning Window bên phải → <b>Timeline tự nhảy và highlight đúng khoảng trống</b>.</li>
+      <li style="margin-bottom:7px;"><b>8. Cảnh báo overlap:</b> ⚠ nghĩa là các tàu cùng terminal đang <b>chồng thời gian</b>. App chỉ cảnh báo, không tự đổi lịch tàu.</li>
+      <li style="margin-bottom:7px;"><b>9. Zoom:</b> <b>25%</b> xem cả tuần; tăng Zoom để xem chi tiết. Có thể kéo thanh ngang để xem phần thời gian ngoài màn hình.</li>
+      <li style="margin-bottom:7px;"><b>10. Xuất Excel:</b> <b>Xuất Data Vessel</b> = dữ liệu tàu · <b>Xuất Free Windows</b> = khoảng trống · <b>Xuất biểu đồ Excel</b> = Gantt giống Timeline.</li>
     </ol>
-
-    <h4>Giải thích nhanh các khái niệm quan trọng</h4>
-    <ul>
-      <li><b>Arrival at Berth:</b> thời điểm tàu bắt đầu chiếm berth theo dữ liệu nhập.</li>
-      <li><b>Departure:</b> thời điểm tàu rời berth theo dữ liệu nhập.</li>
-      <li><b>Berth Duration:</b> Departure − Arrival.</li>
-      <li><b>Overlap:</b> hai hoặc nhiều khoảng Arrival → Departure tại cùng terminal bị chồng thời gian.</li>
-      <li><b>Free Window:</b> khoảng không có tàu theo lịch đã nhập; không đồng nghĩa với berth đã được xác nhận cho sà lan.</li>
-      <li><b>Buffer:</b> số giờ được trừ ở <b>cả đầu và cuối</b> Free Window. Ví dụ Free Window 10h và Buffer 1h → planning window còn 8h. Nếu Buffer làm khoảng trống không còn dương, khoảng đó không được đưa vào Barge Planning.</li>
-      <li><b>NOW:</b> đường đỏ chỉ vị trí thời gian hiện tại của máy trên Timeline.</li>
-    </ul>
-
-    <h4>Tính năng hiện có — đã đối chiếu với code</h4>
-    <ul>
-      <li>Điều hướng tuần Thứ 2 → Chủ nhật, Hôm nay, Tuần trước/Tuần sau.</li>
-      <li>Lọc terminal, tìm kiếm, sắp xếp, zoom timeline và Dark Mode.</li>
-      <li>Timeline theo giờ, cắt hiển thị theo tuần và hỗ trợ cuộn ngang.</li>
-      <li>Hiển thị cảnh báo overlap theo từng tàu; engine Free Window gộp các khoảng berth chồng nhau trước khi tính khoảng trống.</li>
-      <li>Free Window gồm Week Edge và Between Vessels; Available Windows có bộ lọc thời lượng tối thiểu.</li>
-      <li>Danh sách Vessels có lọc terminal, tìm tên tàu và nút nhảy tới đúng tàu trên Timeline.</li>
-      <li>Barge Planning là khu vực tập trung Free Window/Planning Window, có chọn terminal, thời lượng tối thiểu, Buffer mặc định 0h và nút nhảy tới Timeline.</li>
-      <li>Tooltip khi hover và cửa sổ chi tiết khi click tàu.</li>
-      <li>Import ảnh bằng OCR, OCR lại từ ảnh gốc, Preview/Edit trước khi Import, kiểm tra lỗi/cảnh báo và tự sửa định dạng an toàn; có thể xóa ảnh hiện tại bằng nút 🗑️ để chọn ảnh khác.</li>
-      <li>Import XLSX/XLS/CSV và dán dữ liệu từ Excel/CSV; dữ liệu OCR có thể sửa trực tiếp trước khi Import.</li>
-      <li>Confirm &amp; Import không khóa tuyệt đối khi còn lỗi: nếu còn lỗi, hệ thống hỏi lại trước khi Import và người dùng quyết định có tiếp tục hay không.</li>
-      <li>Data Check, lưu localStorage, xuất Free Windows bằng Excel, xuất Data Vessel bằng Excel và xuất Gantt Excel 7 ngày.</li>
-    </ul>
+    <div style="margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-subtle);font-size:11px;line-height:1.5;">
+      <b>💡 Cách dùng nhanh:</b> Nhập lịch tàu → chọn Terminal → xem tàu bên trái → cần tìm chỗ cho sà lan thì xem <b>Barge Planning</b> bên phải → bấm vào tàu hoặc khoảng trống để Timeline tự nhảy tới đúng vị trí.
+    </div>
   </footer>
 </div>
 
