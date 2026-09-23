@@ -566,9 +566,8 @@ footer li{margin-bottom:3px;}
       <input type="text" id="searchInput" placeholder="Vessel, EXVOY, TER, Service...">
     </div>
     <div class="spacer"></div>
-    <button class="btn" id="exportFreeBtn">Xuất Free Windows (CSV)</button>
-    <button class="btn" id="exportDataBtn">Xuất dữ liệu (CSV)</button>
-    <button class="btn" id="exportExcelBtn">Xuất Excel</button>
+    <button class="btn" id="exportFreeBtn">Xuất Free Windows</button>
+    <button class="btn" id="exportExcelBtn">Xuất Data Vessel</button>
     <button class="btn" id="exportTimelineExcelBtn">Xuất biểu đồ Excel</button>
     <button class="btn" id="clearDataBtn" style="color:var(--danger);border-color:var(--danger);">Xoá dữ liệu</button>
   </div>
@@ -2583,26 +2582,81 @@ function downloadCSV(filename, rows){
   URL.revokeObjectURL(url);
 }
 function exportFreeWindows(){
-  const {ws, we, rows} = computeWeekVessels();
-  const terms = getTerminals();
-  const out = [["Terminal","Type","Start","End","Duration (h)"]];
+  const {ws,we,rows} = computeWeekVessels();
+  const terms = state.terminal==="ALL"
+    ? [...new Set(rows.map(r=>r.ter).filter(Boolean))]
+    : [state.terminal];
+  const out=[["VESSEL BERTH PLANNER — FREE WINDOWS"],["Week",fmtDate(ws)+" → "+fmtDate(we)],["Terminal",state.terminal],[],["Terminal","Type","Start","End","Duration (h)"]];
+  let count=0;
   terms.forEach(t=>{
-    const tv = rows.filter(r=>r.ter===t);
-    const {windows} = computeFreeWindows(tv, ws, we);
+    const tv=rows.filter(r=>r.ter===t);
+    const {windows}=computeFreeWindows(tv,ws,we);
     windows.forEach(w=>{
-      out.push([t, w.type, fmtDate(w.start), fmtDate(w.end), windowDurationHours(w,false).toFixed(2)]);
+      out.push([t,w.type,fmtDate(w.start),fmtDate(w.end),Number(windowDurationHours(w,false).toFixed(2))]);
+      count++;
     });
   });
-  downloadCSV("free_windows.csv", out);
-}
-function exportCurrentData(){
-  const {rows} = computeWeekVessels();
-  const filtered = state.terminal==="ALL" ? rows : rows.filter(r=>r.ter===state.terminal);
-  const out = [["VESSEL","EXVOY","Arrival at Berth","Departure","Service","ICD's COT","Terminal's COT","TER","TON BAI","DONE/PLAN","Remark"]];
-  filtered.forEach(v=>{
-    out.push([v.vessel, v.exvoy, fmtDate(v.arrival), fmtDate(v.departure), v.service, v.icdCot?fmtDate(v.icdCot):"", v.terminalCot?fmtDate(v.terminalCot):"", v.ter, v.tonBai, v.donePlan, v.remark]);
-  });
-  downloadCSV("vessel_data.csv", out);
+
+  if(typeof XLSX==="undefined"){
+    const body=out.map((row,i)=>`<tr>${row.map(x=>`<td>${escapeHtml(x??"")}</td>`).join("")}</tr>`).join("");
+    downloadBlob("free_windows.xls",`<html><head><meta charset="UTF-8"><style>
+      body{font-family:Arial}table{border-collapse:collapse}td{border:1px solid #d5dee8;padding:7px}
+      tr:first-child td{font-size:16px;font-weight:700;background:#12345B;color:#fff}
+      tr:nth-child(5) td{font-weight:700;background:#E7EEF5}
+    </style></head><body><table>${body}</table></body></html>`,"application/vnd.ms-excel;charset=utf-8;");
+    return;
+  }
+
+  const wb=XLSX.utils.book_new();
+  const data=XLSX.utils.aoa_to_sheet(out);
+  data["!freeze"]={xSplit:0,ySplit:5};
+  data["!autofilter"]={ref:`A5:E${Math.max(5,out.length)}`};
+  data["!cols"]=[{wch:18},{wch:22},{wch:21},{wch:21},{wch:14}];
+
+  const border={top:{style:"thin",color:{rgb:"D5DEE8"}},bottom:{style:"thin",color:{rgb:"D5DEE8"}},left:{style:"thin",color:{rgb:"D5DEE8"}},right:{style:"thin",color:{rgb:"D5DEE8"}}};
+  for(let rr=0;rr<out.length;rr++){
+    for(let cc=0;cc<5;cc++){
+      const a=XLSX.utils.encode_cell({r:rr,c:cc});
+      if(!data[a]) data[a]={t:"s",v:""};
+      data[a].s={font:{name:"Arial",sz:10,color:{rgb:"243B53"}},alignment:{vertical:"center",wrap_text:true},border};
+    }
+  }
+  // Title
+  data["A1"].s={fill:{fgColor:{rgb:"12345B"}},font:{name:"Arial",sz:16,bold:true,color:{rgb:"FFFFFF"}},alignment:{vertical:"center"},border};
+  data["!merges"]=[{s:{r:0,c:0},e:{r:0,c:4}}];
+  // Meta rows
+  for(let rr=1;rr<=2;rr++) for(let cc=0;cc<5;cc++){
+    const a=XLSX.utils.encode_cell({r:rr,c:cc});
+    data[a].s={fill:{fgColor:{rgb:"F4F7FA"}},font:{name:"Arial",sz:10,bold:cc===0,color:{rgb:"17324D"}},alignment:{vertical:"center"},border};
+  }
+  // Spacer row
+  for(let cc=0;cc<5;cc++) data[XLSX.utils.encode_cell({r:3,c:cc})].s={fill:{fgColor:{rgb:"FFFFFF"}}};
+  // Header
+  for(let cc=0;cc<5;cc++){
+    const a=XLSX.utils.encode_cell({r:4,c:cc});
+    data[a].s={fill:{fgColor:{rgb:"0F3057"}},font:{name:"Arial",sz:10,bold:true,color:{rgb:"FFFFFF"}},alignment:{horizontal:"center",vertical:"center"},border};
+  }
+  // Body
+  for(let rr=5;rr<out.length;rr++){
+    const fill=rr%2===0?"FFFFFF":"F7FAFC";
+    for(let cc=0;cc<5;cc++){
+      const a=XLSX.utils.encode_cell({r:rr,c:cc});
+      data[a].s={fill:{fgColor:{rgb:fill}},font:{name:"Arial",sz:10,color:{rgb:"243B53"}},alignment:{horizontal:cc===4?"center":"left",vertical:"center",wrap_text:true},border};
+    }
+  }
+  data["!rows"]=[{hpx:28},{hpx:20},{hpx:20},{hpx:8},{hpx:24}];
+  XLSX.utils.book_append_sheet(wb,data,"Free Windows");
+  const info=XLSX.utils.aoa_to_sheet([
+    ["VESSEL BERTH PLANNER",""],
+    ["Report","Free Windows"],
+    ["Week",fmtDate(ws)+" → "+fmtDate(we)],
+    ["Terminal",state.terminal],
+    ["Total windows",count],
+    ["Generated",fmtDate(new Date())]
+  ]);
+  info["!cols"]=[{wch:22},{wch:34}];
+  XLSX.utils.book_append_sheet(wb,info,"Info");
+  XLSX.writeFile(wb,"free_windows.xlsx");
 }
 
 /* ============================================================
@@ -2626,32 +2680,71 @@ function currentWeekFilteredRows(){
 function exportCurrentExcel(){
   if(typeof XLSX==="undefined") return exportCurrentDataAsExcelFallback();
   const rows=currentWeekFilteredRows();
-  const aoa=[excelHeaders()];
-  rows.forEach(v=>aoa.push([v.vessel,v.exvoy,fmtDate(v.arrival),fmtDate(v.departure),v.service,v.icdCot?fmtDate(v.icdCot):"",v.terminalCot?fmtDate(v.terminalCot):"",v.ter,v.tonBai,v.donePlan,v.remark]));
-  const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws["!freeze"]={xSplit:0,ySplit:1};
-  ws["!cols"]=excelHeaders().map((h,i)=>({wch:[24,11,21,21,24,21,21,10,11,12,18][i]}));
-  for(let c=0;c<excelHeaders().length;c++){
-    const addr=XLSX.utils.encode_cell({r:0,c});
-    if(ws[addr]) ws[addr].s={font:{bold:true,color:{rgb:"FFFFFF"}},fill:{fgColor:{rgb:"0F3057"}},alignment:{horizontal:"center",vertical:"center"}};
-  }
-  XLSX.utils.book_append_sheet(wb,ws,"Vessel Data");
+  const headers=excelHeaders();
   const {ws:weekStart}=computeWeekVessels();
-  const info=[
-    ["VESSEL BERTH PLANNER",""],
-    ["Week start",fmtDate(weekStart)],
+  const title="VESSEL BERTH PLANNER — DATA VESSEL";
+  const meta=[
+    [title],
+    ["Week",fmtDate(weekStart)+" → "+fmtDate(addDays(weekStart,6))],
     ["Terminal",state.terminal],
-    ["Exported",fmtDate(new Date())]
+    ["Total vessels",rows.length],
+    ["Generated",fmtDate(new Date())],
+    [],
+    headers
   ];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(info),"Info");
-  XLSX.writeFile(wb,"vessel_berth_data.xlsx");
+  rows.forEach(v=>meta.push([v.vessel,v.exvoy,fmtDate(v.arrival),fmtDate(v.departure),v.service,v.icdCot?fmtDate(v.icdCot):"",v.terminalCot?fmtDate(v.terminalCot):"",v.ter,v.tonBai,v.donePlan,v.remark]));
+
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(meta);
+  ws["!freeze"]={xSplit:0,ySplit:7};
+  ws["!autofilter"]={ref:`A7:K${Math.max(7,meta.length)}`};
+  ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:10}}];
+  ws["!cols"]=[24,12,21,21,24,21,21,10,12,14,24].map(w=>({wch:w}));
+  ws["!rows"]=[{hpx:30},{hpx:21},{hpx:21},{hpx:21},{hpx:21},{hpx:8},{hpx:26}];
+
+  const border={top:{style:"thin",color:{rgb:"D5DEE8"}},bottom:{style:"thin",color:{rgb:"D5DEE8"}},left:{style:"thin",color:{rgb:"D5DEE8"}},right:{style:"thin",color:{rgb:"D5DEE8"}}};
+  for(let rr=0;rr<meta.length;rr++){
+    for(let cc=0;cc<11;cc++){
+      const a=XLSX.utils.encode_cell({r:rr,c:cc});
+      if(!ws[a]) ws[a]={t:"s",v:""};
+      ws[a].s={font:{name:"Arial",sz:10,color:{rgb:"243B53"}},alignment:{vertical:"center",wrap_text:true},border};
+    }
+  }
+  ws["A1"].s={fill:{fgColor:{rgb:"12345B"}},font:{name:"Arial",sz:16,bold:true,color:{rgb:"FFFFFF"}},alignment:{vertical:"center"},border};
+  for(let rr=1;rr<=4;rr++) for(let cc=0;cc<11;cc++){
+    const a=XLSX.utils.encode_cell({r:rr,c:cc});
+    ws[a].s={fill:{fgColor:{rgb:"F4F7FA"}},font:{name:"Arial",sz:10,bold:cc===0,color:{rgb:"17324D"}},alignment:{vertical:"center",wrap_text:true},border};
+  }
+  for(let cc=0;cc<11;cc++){
+    const a=XLSX.utils.encode_cell({r:6,c:cc});
+    ws[a].s={fill:{fgColor:{rgb:"0F3057"}},font:{name:"Arial",sz:10,bold:true,color:{rgb:"FFFFFF"}},alignment:{horizontal:"center",vertical:"center",wrap_text:true},border};
+  }
+  for(let rr=7;rr<meta.length;rr++){
+    const fill=(rr-7)%2===0?"FFFFFF":"F7FAFC";
+    for(let cc=0;cc<11;cc++){
+      const a=XLSX.utils.encode_cell({r:rr,c:cc});
+      ws[a].s={fill:{fgColor:{rgb:fill}},font:{name:"Arial",sz:10,color:{rgb:"243B53"}},alignment:{horizontal:[0,4,10].includes(cc)?"left":"center",vertical:"center",wrap_text:true},border};
+    }
+  }
+  XLSX.utils.book_append_sheet(wb,ws,"Data Vessel");
+
+  const info=XLSX.utils.aoa_to_sheet([
+    ["VESSEL BERTH PLANNER",""],
+    ["Report","Data Vessel"],
+    ["Week",fmtDate(weekStart)+" → "+fmtDate(addDays(weekStart,6))],
+    ["Terminal",state.terminal],
+    ["Total vessels",rows.length],
+    ["Generated",fmtDate(new Date())]
+  ]);
+  info["!cols"]=[{wch:22},{wch:34}];
+  XLSX.utils.book_append_sheet(wb,info,"Info");
+  XLSX.writeFile(wb,"data_vessel.xlsx");
 }
 function exportCurrentDataAsExcelFallback(){
   const rows=currentWeekFilteredRows();
   const headers=excelHeaders();
   const html=`<html><head><meta charset="UTF-8"></head><body><table border="1"><tr>${headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")}</tr>${rows.map(v=>`<tr>${[v.vessel,v.exvoy,fmtDate(v.arrival),fmtDate(v.departure),v.service,v.icdCot?fmtDate(v.icdCot):"",v.terminalCot?fmtDate(v.terminalCot):"",v.ter,v.tonBai,v.donePlan,v.remark].map(x=>`<td>${escapeHtml(x??"")}</td>`).join("")}</tr>`).join("")}</table></body></html>`;
-  downloadBlob("vessel_berth_data.xls",html,"application/vnd.ms-excel;charset=utf-8;");
+  downloadBlob("data_vessel.xls",html,"application/vnd.ms-excel;charset=utf-8;");
 }
 function downloadBlob(filename,text,mime){
   const blob=new Blob(["\ufeff",text],{type:mime});
@@ -2918,7 +3011,6 @@ function bindEvents(){
   document.getElementById("dataCheckBtn").onclick = openDataCheck;
   document.getElementById("importBtn").onclick = openImportModal;
   document.getElementById("exportFreeBtn").onclick = exportFreeWindows;
-  document.getElementById("exportDataBtn").onclick = exportCurrentData;
   document.getElementById("exportExcelBtn").onclick = exportCurrentExcel;
   document.getElementById("exportTimelineExcelBtn").onclick = exportTimelineExcel;
   document.getElementById("clearDataBtn").onclick = ()=>{
