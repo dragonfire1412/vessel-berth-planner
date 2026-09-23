@@ -1327,6 +1327,68 @@ function renderTimelineForTerminal(term, vessels, ws, we, dayWidth){
     </div>`;
 }
 
+function renderTimeline(){
+  const {ws,we,rows}=computeWeekVessels();
+  const wrap=document.getElementById("timelineScroll");
+  const dayWidth=pxPerHour()*24;
+
+  // Apply terminal filter and current sort order.
+  const terms=getTerminals().filter(t=>state.terminal==="ALL" || t===state.terminal);
+  const grouped=terms.map(term=>{
+    const tv=sortVessels(rows.filter(v=>v.ter===term));
+    return {term,vessels:tv};
+  }).filter(g=>g.vessels.length);
+
+  let leftBody="";
+  let rightBody="";
+  grouped.forEach(g=>{
+    const rendered=renderTimelineForTerminalCombined(g.term,g.vessels,ws,we,dayWidth);
+    leftBody+=rendered.leftHtml;
+    rightBody+=rendered.rightHtml;
+  });
+
+  if(!grouped.length){
+    leftBody='<div class="empty-state" style="padding:30px;">Không có dữ liệu tàu trong tuần/điều kiện đang chọn.</div>';
+    rightBody='<div class="empty-state" style="padding:30px;">Không có dữ liệu để hiển thị.</div>';
+  }
+
+  const {daysHtml}=renderTimelineHeader(ws);
+  const now=new Date();
+  const nowX=timeToX(now,ws);
+  const nowMarker=(now>=ws && now<=we)
+    ? `<div class="now-marker" style="left:${nowX}px;"><div class="now-tag">NOW</div></div>`
+    : "";
+
+  wrap.innerHTML=`
+    <div class="tl-left">
+      <div class="tl-left-head">TERMINAL / VESSEL / EXVOY</div>
+      <div class="tl-left-body">${leftBody}</div>
+    </div>
+    <div class="tl-right">
+      <div class="tl-days-row" style="width:${dayWidth*7}px">${daysHtml}</div>
+      ${renderHoursRow(dayWidth)}
+      <div class="tl-body" style="width:${dayWidth*7}px">
+        ${nowMarker}
+        ${rightBody}
+      </div>
+    </div>`;
+
+  // Vessel hover/click behaviour.
+  wrap.querySelectorAll(".vessel-bar,.tl-vessel-label").forEach(el=>{
+    el.addEventListener("mouseenter",showVesselTooltip);
+    el.addEventListener("mouseleave",hideTooltip);
+    el.addEventListener("click",()=>{
+      const v=state.data.find(x=>x.id===el.dataset.vid);
+      if(v) openDetail(v);
+    });
+  });
+
+  wrap.querySelectorAll(".free-window").forEach(el=>{
+    el.addEventListener("mouseenter",showFreeTooltip);
+    el.addEventListener("mouseleave",hideTooltip);
+  });
+}
+
 /* Because sticky-left + scroll-right need to be row-aligned, we build combined rows instead */
 function renderTimelineForTerminalCombined(term, vessels, ws, we, dayWidth){
   const now = new Date();
