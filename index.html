@@ -192,6 +192,15 @@ body.dark .scard.accent .sval{color:var(--accent);}
   text-transform:uppercase;letter-spacing:.4px;
 }
 .panel-title .hint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:12px;margin-left:auto;}
+.timeline-toggle-btn{
+  border:1px solid var(--border);background:var(--bg-panel);color:var(--text-muted);
+  border-radius:var(--radius-sm);padding:5px 9px;font-size:11.5px;font-weight:700;
+  cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.timeline-toggle-btn:hover{background:var(--navy-tint);color:var(--navy);border-color:var(--border-strong);}
+.timeline-wrap.timeline-left-hidden .tl-left{display:none;}
+.timeline-wrap.timeline-left-hidden .tl-right{min-width:100%;}
+
 
 .timeline-wrap{
   background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
@@ -590,8 +599,12 @@ footer li{margin-bottom:3px;}
 
   <div class="summary-cards" id="summaryCards"></div>
 
-  <div class="panel-title">Timeline tuần<span class="hint" id="overviewHint">Mỗi tàu một màu · Free Window màu xanh</span></div>
-  <div class="timeline-wrap">
+  <div class="panel-title">
+    <span>Timeline tuần</span>
+    <span class="hint" id="overviewHint">Mỗi tàu một màu · Free Window màu xanh</span>
+    <button class="timeline-toggle-btn" id="timelineLeftToggle" type="button">◀ Ẩn thông tin tàu</button>
+  </div>
+  <div class="timeline-wrap" id="timelineWrap">
     <div class="timeline-scroll" id="timelineScroll"></div>
   </div>
 
@@ -952,7 +965,8 @@ const state = {
   bpMinDur: 0,
   vesselTerminal: "ALL",
   vesselSearch: "",
-  dark: false
+  dark: false,
+  timelineLeftVisible: true
 };
 const PPH_BASE = 18; // px per hour at 100% zoom — ~3 days visible in a normal desktop viewport
 
@@ -1377,7 +1391,11 @@ function renderTimelineForTerminal(term, vessels, ws, we, dayWidth){
 function renderTimeline(){
   const {ws,we,rows}=computeWeekVessels();
   const wrap=document.getElementById("timelineScroll");
+  const timelineWrap=document.getElementById("timelineWrap");
+  const toggleBtn=document.getElementById("timelineLeftToggle");
   const dayWidth=pxPerHour()*24;
+  if(timelineWrap) timelineWrap.classList.toggle("timeline-left-hidden", !state.timelineLeftVisible);
+  if(toggleBtn) toggleBtn.textContent = state.timelineLeftVisible ? "◀ Ẩn thông tin tàu" : "▶ Hiện thông tin tàu";
 
   // Apply terminal filter and current sort order.
   const terms=getTerminals().filter(t=>state.terminal==="ALL" || t===state.terminal);
@@ -3110,6 +3128,10 @@ function bindEvents(){
   document.getElementById("nextWeekBtn").onclick = ()=>{ state.weekStart = addDays(state.weekStart,7); renderAll(); };
   document.getElementById("todayBtn").onclick = ()=>{ state.weekStart = getMonday(new Date()); renderAll(); };
   document.getElementById("zoomSelect").onchange = (e)=>{ state.zoom = parseFloat(e.target.value); renderTimeline(); };
+  document.getElementById("timelineLeftToggle").onclick = ()=>{
+    state.timelineLeftVisible = !state.timelineLeftVisible;
+    renderTimeline();
+  };
   document.getElementById("bufferSelect").onchange = (e)=>{ state.buffer = parseFloat(e.target.value); renderAll(); };
   document.getElementById("sortSelect").onchange = (e)=>{ state.sortBy = e.target.value; renderTimeline(); };
   document.getElementById("bpTerminalSelect").onchange = (e)=>{ state.bpTerminal = e.target.value; renderBargePlanning(); };
