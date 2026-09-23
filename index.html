@@ -2835,9 +2835,9 @@ function exportTimelineExcel(){
     // One vessel per row, with the identity shown in the frozen left block.
     tv.forEach(v=>{
       const row=new Array(totalCols).fill("");
-      row[0]=v.vessel;
-      row[1]=v.exvoy||"—";
-      row[2]=durationText(v);
+      row[0]=v.vessel+"\n"+(v.exvoy||"—")+"  ·  "+durationText(v);
+      row[1]="";
+      row[2]="";
       const [startSlot,endSlot]=getActiveRange(v);
       row[3+startSlot]=v.vessel+"\\n"+(v.exvoy||"")+"  •  "+durationText(v);
       aoa.push(row);
