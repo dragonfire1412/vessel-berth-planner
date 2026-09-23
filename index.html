@@ -2008,26 +2008,29 @@ function previewRecordsTable(records, mount, onChange){
     return `<tr>${vals.map((v,j)=>{ const issue=bad.get(`${i}:${j}`); const cls=issue?(issue.severity==='error'?'ocr-cell-error':'ocr-cell-warning'):''; return `<td><input class="${cls}" title="${issue?escapeHtml(issue.text):''}" data-r="${i}" data-c="${j}" value="${escapeHtml(v)}"></td>`; }).join("")}</tr>`;
   }).join("")}</tbody></table></div></div>`;
   mount.querySelectorAll("input").forEach(inp=>{
-    inp.addEventListener("change",()=>{
-      const r=+inp.dataset.r,c=+inp.dataset.c; const row=records[r];
-      if(c===0) row.vessel=inp.value.trim();
-      else if(c===1) row.exvoy=inp.value.trim();
-      else if(c===2){ row.arrivalRaw=inp.value.trim(); row.arrival=parseDate(row.arrivalRaw); }
-      else if(c===3){ row.departureRaw=inp.value.trim(); row.departure=parseDate(row.departureRaw); }
-      else if(c===4) row.service=inp.value.trim();
-      else if(c===5){ row.icdCot=parseDate(inp.value.trim()); }
-      else if(c===6){ row.terminalCot=parseDate(inp.value.trim()); }
-      else if(c===7) row.ter=inp.value.trim().toUpperCase();
-      else if(c===8) row.tonBai=inp.value.trim();
-      else if(c===9) row.donePlan=inp.value.trim();
-      else if(c===10) row.remark=inp.value.trim();
-      autoFixRecords(records);
+    const syncCell=()=>{
+      const ri=+inp.dataset.r, ci=+inp.dataset.c, row=records[ri];
+      if(!row) return;
+      if(ci===0) row.vessel=inp.value.trim();
+      else if(ci===1) row.exvoy=inp.value.trim();
+      else if(ci===2){ row.arrivalRaw=inp.value.trim(); row.arrival=parseDate(row.arrivalRaw); }
+      else if(ci===3){ row.departureRaw=inp.value.trim(); row.departure=parseDate(row.departureRaw); }
+      else if(ci===4) row.service=inp.value.trim();
+      else if(ci===5) row.icdCot=parseDate(inp.value.trim());
+      else if(ci===6) row.terminalCot=parseDate(inp.value.trim());
+      else if(ci===7) row.ter=inp.value.trim().toUpperCase();
+      else if(ci===8) row.tonBai=inp.value.trim();
+      else if(ci===9) row.donePlan=inp.value.trim();
+      else if(ci===10) row.remark=inp.value.trim();
+      if(window.__VBP_OCR_MANUAL_EDITS) window.__VBP_OCR_MANUAL_EDITS.add(`${ri}:${ci}`);
       onChange();
-    });
+    };
+    inp.addEventListener("input",syncCell);
+    inp.addEventListener("change",syncCell);
   });
 }
 
-async function runImageOCR(file, overlay){
+async function runImageOCR(file, overlay, preserveRecords=null, preserveEdits=null){
   const status=overlay.querySelector("#ocrStatus");
   const preview=overlay.querySelector("#ocrImagePreview");
   const resultMount=overlay.querySelector("#ocrResultMount");
@@ -2197,6 +2200,21 @@ async function runImageOCR(file, overlay){
     // Remove accidental header/empty records, but keep rows with optional blanks.
     records=records.filter(r=>r.vessel || r.exvoy || r.arrivalRaw || r.departureRaw || r.ter);
 
+    // Preserve cells that the user corrected manually before pressing "OCR lại".
+    // OCR still runs on the original image; the manual corrections are authoritative.
+    if(preserveRecords && preserveEdits && preserveEdits.size){
+      const fields=["vessel","exvoy","arrivalRaw","departureRaw","service","icdCot","terminalCot","ter","tonBai","donePlan","remark"];
+      preserveEdits.forEach(key=>{
+        const [riS,ciS]=String(key).split(":");
+        const ri=Number(riS), ci=Number(ciS);
+        const oldRow=preserveRecords[ri], newRow=records[ri], field=fields[ci];
+        if(!oldRow || !newRow || !field) return;
+        newRow[field]=oldRow[field];
+        if(ci===2) newRow.arrival=oldRow.arrival;
+        if(ci===3) newRow.departure=oldRow.departure;
+      });
+    }
+
     if(!records.length){
       throw new Error("Không đọc được dữ liệu trong các ô của bảng. Khung bảng đã nhận diện nhưng OCR không trả về chữ. Hãy bấm OCR lại hoặc kiểm tra kết nối Internet.");
     }
@@ -2304,6 +2322,7 @@ function openImportModal(){
   document.body.appendChild(overlay);
   let pendingRecords=null;
   let lastImageFile=null;
+  window.__VBP_OCR_MANUAL_EDITS=new Set();
   const fileInput=overlay.querySelector("#imageFileInput");
   const excelFileInput=overlay.querySelector("#excelFileInput");
   const excelFileStatus=overlay.querySelector("#excelFileStatus");
@@ -2337,6 +2356,7 @@ function openImportModal(){
   const handleImage=async(file)=>{
     if(!file||!file.type.startsWith("image/")) return;
     lastImageFile=file;
+    window.__VBP_OCR_MANUAL_EDITS=new Set();
     await runImageOCR(file,overlay);
     pendingRecords=state._pendingImportRecords;
   };
@@ -2352,10 +2372,15 @@ function openImportModal(){
   overlay.querySelector("#reOcrBtn").onclick=async()=>{
     const f=lastImageFile || fileInput.files[0];
     if(!f){ status.textContent="Chưa có ảnh để OCR lại."; return; }
+    const current=state._pendingImportRecords||pendingRecords||[];
+    const edits=new Set(window.__VBP_OCR_MANUAL_EDITS||[]);
     status.className="ocr-status loading";
-    status.textContent="Đang OCR lại từ ảnh gốc…";
-    await runImageOCR(f,overlay);
+    status.textContent=edits.size
+      ? `Đang OCR lại… giữ nguyên ${edits.size} ô bạn đã sửa thủ công.`
+      : "Đang OCR lại từ ảnh gốc…";
+    await runImageOCR(f,overlay,current,edits);
     pendingRecords=state._pendingImportRecords;
+    window.__VBP_OCR_MANUAL_EDITS=new Set();
   };
   overlay.querySelector("#parseBtn").onclick=()=>{
     const parsed=parsePastedText(overlay.querySelector("#pasteArea").value);
@@ -2390,9 +2415,15 @@ function openImportModal(){
   overlay.querySelector("#clearPasteBtn").onclick=()=>{overlay.querySelector("#pasteArea").value="";previewMount.innerHTML="";};
   applyBtn.onclick=()=>{
     const parsed=state._pendingImportRecords||pendingRecords;
-    if(!parsed||!parsed.length) return;
+    if(!parsed||!parsed.length){
+      status.textContent="Chưa có dữ liệu để import.";
+      return;
+    }
     const check=validateRecords(parsed);
     if(check.errorRows>0){
+      applyBtn.disabled=true;
+      status.className="ocr-status error";
+      status.textContent="Còn lỗi bắt buộc. Sửa các ô đỏ trong Preview rồi bấm Confirm & Import.";
       overlay.querySelector("#ocrValidation")?.scrollIntoView({behavior:"smooth",block:"center"});
       return;
     }
@@ -2404,7 +2435,7 @@ function openImportModal(){
     state.terminal="ALL";
     renderAll();
   };
-  const close=()=>{delete state._pendingImportRecords;overlay.remove();};
+  const close=()=>{delete state._pendingImportRecords;delete window.__VBP_OCR_MANUAL_EDITS;overlay.remove();};
   overlay.querySelector(".modal-close").onclick=close;
   overlay.querySelector("#cancelImportBtn").onclick=close;
   overlay.addEventListener("click",e=>{if(e.target===overlay) close();});
