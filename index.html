@@ -580,10 +580,6 @@ footer li{margin-bottom:3px;}
         <option value="duration">Duration</option>
       </select>
     </div>
-    <div class="control-field">
-      <label>Tìm kiếm</label>
-      <input type="text" id="searchInput" placeholder="Vessel, EXVOY, TER, Service...">
-    </div>
     <div class="spacer"></div>
     <button class="btn" id="exportFreeBtn">Xuất Free Windows</button>
     <button class="btn" id="exportExcelBtn">Xuất Data Vessel</button>
@@ -695,15 +691,15 @@ footer li{margin-bottom:3px;}
         nên overlap không tạo ra khoảng trống giả.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 11 — Lọc Free Window:</b> tại <b>Available Windows</b>, chọn ngưỡng tối thiểu 2h / 4h / 6h / 8h / 12h
-        để chỉ hiện các khoảng trống đủ dài. Khối này hiển thị các terminal có dữ liệu trong tuần,
-        không phụ thuộc chip Terminal đang chọn.
+        <b>Bước 11 — Danh sách tàu:</b> tại <b>Vessels / Lịch tàu</b>, chọn terminal và nhập tên tàu vào ô tìm kiếm.
+        Danh sách chỉ hiện các tàu phù hợp trong tuần. Bấm vào một tàu để Timeline tự nhảy tới đúng thanh tàu đó.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 12 — Barge Planning:</b> chọn terminal và thời lượng tối thiểu. App lấy Free Window rồi áp dụng
-        <b>Buffer lập kế hoạch</b>. Ví dụ Free Window 10h với Buffer 1h sẽ còn <b>8h planning window</b>
-        (trừ 1h ở đầu và 1h ở cuối). Đây chỉ là khoảng trống theo lịch tàu, <b>không phải cam kết cầu bến</b>;
-        thực tế còn phụ thuộc berth, thiết bị, nhân lực và điều kiện khai thác.
+        <b>Bước 12 — Barge Planning:</b> đây là khu vực duy nhất để xem <b>Free Window / Planning Window</b>.
+        Chọn terminal và thời lượng tối thiểu. <b>Buffer mặc định 0h</b>; nếu chọn Buffer 1h,
+        Free Window 10h sẽ còn <b>8h planning window</b> (trừ 1h ở đầu và 1h ở cuối).
+        Bấm vào planning window để Timeline nhảy tới đúng khoảng trống. Đây chỉ là khoảng trống theo lịch tàu,
+        <b>không phải cam kết cầu bến</b>.
       </li>
       <li style="margin-bottom:7px;">
         <b>Bước 13 — Zoom:</b> 25% cho toàn bộ 1 tuần; 50–75% cho góc nhìn rộng; 100% khoảng 3 ngày;
@@ -746,7 +742,8 @@ footer li{margin-bottom:3px;}
       <li>Timeline theo giờ, cắt hiển thị theo tuần và hỗ trợ cuộn ngang.</li>
       <li>Hiển thị cảnh báo overlap theo từng tàu; engine Free Window gộp các khoảng berth chồng nhau trước khi tính khoảng trống.</li>
       <li>Free Window gồm Week Edge và Between Vessels; Available Windows có bộ lọc thời lượng tối thiểu.</li>
-      <li>Barge Planning có chọn terminal, thời lượng tối thiểu, Buffer và nút xem khoảng trống trên Timeline.</li>
+      <li>Danh sách Vessels có lọc terminal, tìm tên tàu và nút nhảy tới đúng tàu trên Timeline.</li>
+      <li>Barge Planning là khu vực tập trung Free Window/Planning Window, có chọn terminal, thời lượng tối thiểu, Buffer mặc định 0h và nút nhảy tới Timeline.</li>
       <li>Tooltip khi hover và cửa sổ chi tiết khi click tàu.</li>
       <li>Import ảnh bằng OCR, OCR lại từ ảnh gốc, Preview/Edit trước khi Import, kiểm tra lỗi/cảnh báo và tự sửa định dạng an toàn; có thể xóa ảnh hiện tại bằng nút 🗑️ để chọn ảnh khác.</li>
       <li>Import XLSX/XLS/CSV và dán dữ liệu từ Excel/CSV; dữ liệu OCR có thể sửa trực tiếp trước khi Import.</li>
@@ -3213,11 +3210,6 @@ function bindEvents(){
   document.getElementById("vesselSearchInput").oninput = (e)=>{
     clearTimeout(vesselSearchDebounce);
     vesselSearchDebounce = setTimeout(()=>{ state.vesselSearch = e.target.value; renderVesselList(); }, 150);
-  };
-  let searchDebounce;
-  document.getElementById("searchInput").oninput = (e)=>{
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(()=>{ state.search = e.target.value; renderAll(); }, 220);
   };
   document.getElementById("themeToggle").onclick = ()=>{
     state.dark = !state.dark;
