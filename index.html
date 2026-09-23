@@ -619,84 +619,84 @@ footer li{margin-bottom:3px;}
     <h4>Hướng dẫn sử dụng — dành cho người mới</h4>
     <ol style="padding-left:20px;margin:0;">
       <li style="margin-bottom:7px;">
-        <b>Bước 1 — Chọn tuần:</b> dùng <b>Tuần trước</b>, <b>Hôm nay</b> hoặc <b>Tuần sau</b>.
-        App luôn tính tuần theo <b>Thứ 2 → Chủ nhật</b>. Nút Hôm nay đưa về tuần chứa ngày hiện tại của máy.
+        <b>Bước 1 — Nhập dữ liệu trước:</b> bấm <b>Nhập dữ liệu ảnh / Excel</b> để đưa lịch tàu vào app.
+        Có thể upload <b>PNG/JPG/JPEG/WEBP</b>, Ctrl+V ảnh chụp màn hình, chọn <b>XLSX/XLS/CSV</b> hoặc dán bảng copy từ Excel.
+        App có sẵn dữ liệu mẫu để xem thử, nhưng khi muốn lập kế hoạch theo lịch thực tế thì hãy nhập dữ liệu mới trước.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 2 — Chọn terminal:</b> <b>ALL</b> xem tất cả terminal; bấm <b>CLI / GML / PAP / SSIT / TCIT</b>
-        để chỉ xem terminal đó trên <b>Timeline</b>. Danh sách terminal được tự động lấy từ cột <b>TER</b> của dữ liệu.
+        <b>Bước 2 — Kiểm tra Preview trước khi Import:</b> nếu nhập ảnh, app sẽ OCR và hiển thị bảng <b>OCR Result / Import Preview</b>.
+        Kiểm tra Vessel, EXVOY, Arrival at Berth, Departure, Service, COT, TER và các cột còn lại.
+        Có thể sửa trực tiếp từng ô. <b>OCR lại</b> sẽ chạy lại từ ảnh gốc; <b>🗑️ Xóa ảnh</b> cho phép bỏ ảnh hiện tại để chọn/dán ảnh khác.
+        <b>Tự sửa lỗi an toàn</b> chỉ xử lý các lỗi định dạng có thể sửa chắc chắn, không tự đoán nội dung OCR không rõ.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 3 — Đọc Timeline:</b> mỗi thanh màu là một tàu. Chiều dài thanh thể hiện khoảng
+        <b>Bước 3 — Confirm &amp; Import:</b> khi đã kiểm tra Preview, bấm <b>Confirm &amp; Import</b> để đưa dữ liệu vào lịch.
+        Nếu vẫn còn lỗi, app không khóa nút; nó sẽ hiện hộp thoại cho biết còn bao nhiêu lỗi và hỏi lại.
+        Chọn <b>Đóng</b> để quay lại sửa hoặc <b>Xác nhận</b> nếu bạn vẫn muốn Import. Điều này hữu ích khi có dòng trống hoặc dữ liệu bạn chủ động bỏ qua.
+      </li>
+      <li style="margin-bottom:7px;">
+        <b>Bước 4 — Kiểm tra dữ liệu sau khi Import:</b> dùng nút <b>✓ Data Check</b> ở góc trên để kiểm tra toàn bộ dữ liệu hiện tại,
+        xem lỗi/cảnh báo theo từng dòng và xử lý các dữ liệu bất thường trước khi lập kế hoạch.
+      </li>
+      <li style="margin-bottom:7px;">
+        <b>Bước 5 — Chọn tuần:</b> dùng <b>Tuần trước</b>, <b>Hôm nay</b> hoặc <b>Tuần sau</b>.
+        App tính tuần theo <b>Thứ 2 → Chủ nhật</b>. Nút <b>Hôm nay</b> đưa về tuần chứa ngày hiện tại của máy.
+      </li>
+      <li style="margin-bottom:7px;">
+        <b>Bước 6 — Chọn terminal:</b> <b>ALL</b> xem tất cả terminal; bấm <b>CLI / GML / PAP / SSIT / TCIT</b>
+        để chỉ xem terminal đó trên <b>Timeline</b>. Danh sách terminal lấy từ cột <b>TER</b> của dữ liệu đã nhập.
+      </li>
+      <li style="margin-bottom:7px;">
+        <b>Bước 7 — Đọc Timeline:</b> mỗi thanh màu là một tàu. Chiều dài thanh thể hiện khoảng
         <b>Arrival at Berth → Departure</b>. Nếu tàu bắt đầu trước hoặc kết thúc sau tuần đang xem,
-        thanh được cắt theo biên tuần nhưng dữ liệu gốc không bị thay đổi.
+        thanh được cắt theo biên tuần để hiển thị, còn dữ liệu gốc không bị thay đổi.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 4 — Xem thông tin tàu:</b> rê chuột lên thanh tàu hoặc tên tàu để xem tooltip nhanh.
+        <b>Bước 8 — Xem thông tin tàu:</b> rê chuột lên thanh tàu hoặc tên tàu để xem tooltip nhanh.
         Bấm vào thanh tàu hoặc tên tàu để mở chi tiết: Vessel, EXVOY, Terminal, Arrival, Departure,
         Service, ICD's COT, Terminal's COT, TỒN BÃI, DONE/PLAN và Remark.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 5 — Kiểm tra tàu bị chồng lịch:</b> khi hai tàu cùng terminal có thời gian berth chồng nhau,
-        app đánh dấu cảnh báo <b>⚠</b> trên thanh tàu và tính số giờ overlap. Đây là cảnh báo dữ liệu/lịch;
-        app không tự quyết định tàu nào phải đổi lịch.
+        <b>Bước 9 — Kiểm tra tàu bị chồng lịch:</b> khi hai tàu cùng terminal có thời gian berth chồng nhau,
+        app đánh dấu <b>⚠</b> và tính số giờ overlap. Đây là cảnh báo về dữ liệu/lịch; app không tự quyết định tàu nào phải đổi lịch.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 6 — Đọc Free Window:</b> <b>FREE WINDOW</b> là khoảng thời gian terminal không có tàu
-        theo dữ liệu Arrival/Departure đang có. <b>Between vessels</b> là khoảng trống giữa các tàu;
-        <b>Week edge</b> là khoảng trống ở đầu hoặc cuối tuần. Các khoảng tàu chồng nhau được gộp trước khi
-        tính Free Window, nên overlap không tạo ra khoảng trống giả.
+        <b>Bước 10 — Đọc Free Window:</b> <b>FREE WINDOW</b> là khoảng thời gian terminal không có tàu
+        theo dữ liệu Arrival/Departure. <b>Between vessels</b> là khoảng trống giữa các tàu;
+        <b>Week edge</b> là khoảng trống ở đầu hoặc cuối tuần. Các khoảng tàu chồng nhau được gộp trước khi tính,
+        nên overlap không tạo ra khoảng trống giả.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 7 — Lọc Free Window:</b> ở <b>Available Windows</b>, chọn ngưỡng tối thiểu 2h / 4h / 6h / 8h / 12h
-        để chỉ hiện các khoảng trống có thời lượng đủ lớn. Khối này hiển thị các terminal trong dữ liệu của tuần,
+        <b>Bước 11 — Lọc Free Window:</b> tại <b>Available Windows</b>, chọn ngưỡng tối thiểu 2h / 4h / 6h / 8h / 12h
+        để chỉ hiện các khoảng trống đủ dài. Khối này hiển thị các terminal có dữ liệu trong tuần,
         không phụ thuộc chip Terminal đang chọn.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 8 — Barge Planning:</b> chọn terminal và thời lượng tối thiểu. App lấy Free Window rồi áp dụng
+        <b>Bước 12 — Barge Planning:</b> chọn terminal và thời lượng tối thiểu. App lấy Free Window rồi áp dụng
         <b>Buffer lập kế hoạch</b>. Ví dụ Free Window 10h với Buffer 1h sẽ còn <b>8h planning window</b>
         (trừ 1h ở đầu và 1h ở cuối). Đây chỉ là khoảng trống theo lịch tàu, <b>không phải cam kết cầu bến</b>;
         thực tế còn phụ thuộc berth, thiết bị, nhân lực và điều kiện khai thác.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 9 — Zoom:</b> 25% cho toàn bộ 1 tuần; 50–75% cho góc nhìn rộng; 100% khoảng 3 ngày;
-        125–150% để xem chi tiết; 200% để soi sát theo giờ. Có thể kéo thanh cuộn ngang để xem phần thời gian
-        nằm ngoài màn hình.
+        <b>Bước 13 — Zoom:</b> 25% cho toàn bộ 1 tuần; 50–75% cho góc nhìn rộng; 100% khoảng 3 ngày;
+        125–150% để xem chi tiết; 200% để soi sát theo giờ. Có thể kéo thanh cuộn ngang để xem phần thời gian ngoài màn hình.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 10 — Tìm kiếm &amp; sắp xếp:</b> tìm theo Vessel, EXVOY, TER hoặc Service.
-        Sắp xếp theo Arrival, Departure, Vessel, Terminal hoặc Duration. Tìm kiếm làm thay đổi tập dữ liệu
-        đang hiển thị trong Timeline và các phần tổng hợp liên quan.
+        <b>Bước 14 — Tìm kiếm &amp; sắp xếp:</b> tìm theo Vessel, EXVOY, TER hoặc Service.
+        Sắp xếp theo Arrival, Departure, Vessel, Terminal hoặc Duration. Tìm kiếm làm thay đổi dữ liệu đang hiển thị
+        trong Timeline và các phần tổng hợp liên quan.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 11 — Nhập dữ liệu:</b> bấm <b>Nhập dữ liệu ảnh / Excel</b>. Có thể upload PNG/JPG/JPEG/WEBP,
-        Ctrl+V ảnh chụp màn hình, chọn XLSX/XLS/CSV hoặc dán bảng copy từ Excel.
-        Với ảnh, app OCR rồi <b>phải kiểm tra Preview trước khi nhập</b>. Nút <b>OCR lại</b> chạy lại OCR
-        từ chính ảnh gốc. Có thể sửa trực tiếp từng ô; <b>Tự sửa lỗi an toàn</b> chỉ sửa định dạng như khoảng trắng
-        hoặc chuẩn hóa ngày giờ, không tự đoán nội dung bị OCR sai.
+        <b>Bước 15 — Xuất dữ liệu:</b> có 3 lựa chọn:
+        <b>Xuất Free Windows</b> tạo file Excel các khoảng trống theo lịch tàu;
+        <b>Xuất Data Vessel</b> tạo file Excel dữ liệu tàu;
+        <b>Xuất biểu đồ Excel</b> tạo file Gantt 7 ngày theo Timeline với TERMINAL / VESSEL / EXVOY,
+        mốc 2 giờ, màu tàu và Free Window. Các file Excel được định dạng để dễ đọc, lọc, in hoặc gửi.
       </li>
       <li style="margin-bottom:7px;">
-        <b>Bước 12 — Sửa lỗi và Confirm &amp; Import:</b> lỗi/cảnh báo được hiển thị ngay trên bảng Preview và chỉ rõ dòng/ô cần kiểm tra.
-        Có thể sửa trực tiếp từng ô rồi hệ thống sẽ kiểm tra lại dữ liệu. Nếu còn lỗi, vẫn có thể bấm <b>Confirm &amp; Import</b>;
-        app sẽ hiện hộp thoại hỏi lại số dòng lỗi và cho người dùng chọn <b>Đóng</b> để sửa tiếp hoặc <b>Xác nhận</b> để Import.
-        Vì có trường hợp dòng trống hoặc dữ liệu người dùng chủ động bỏ qua, hệ thống không tự quyết định thay người dùng.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 13 — Data Check:</b> nút biểu tượng ✓ ở góc trên dùng để kiểm tra toàn bộ dữ liệu hiện tại
-        và xem danh sách lỗi/cảnh báo theo từng dòng.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 14 — Xuất dữ liệu:</b> có 3 lựa chọn chính:
-        <b>Xuất Free Windows</b> tạo file Excel riêng cho các khoảng trống theo lịch tàu, gồm Terminal, loại khoảng trống,
-        thời gian bắt đầu/kết thúc và số giờ; <b>Xuất Data Vessel</b> tạo file Excel dữ liệu tàu với các trường VESSEL, EXVOY,
-        Arrival, Departure, Service, COT, TER, TỒN BÃI, DONE/PLAN và Remark; <b>Xuất biểu đồ Excel</b> tạo file Gantt 7 ngày
-        theo Timeline, có TERMINAL / VESSEL / EXVOY, các mốc 2 giờ, màu tàu và Free Window. Các file Excel được định dạng
-        để dễ đọc, lọc, in hoặc gửi cho người khác.
-      </li>
-      <li style="margin-bottom:7px;">
-        <b>Bước 15 — Lưu dữ liệu:</b> dữ liệu được lưu trong <b>localStorage của trình duyệt</b>, nên refresh trang
-        không làm mất dữ liệu trên cùng trình duyệt/thiết bị. Xóa dữ liệu trình duyệt hoặc đổi thiết bị có thể làm
-        dữ liệu local không còn. Nút <b>Xóa dữ liệu</b> sẽ xóa dữ liệu đã lưu và nạp lại dữ liệu mẫu.
+        <b>Bước 16 — Lưu dữ liệu:</b> dữ liệu được lưu trong <b>localStorage của trình duyệt</b>, nên refresh trang
+        không làm mất dữ liệu trên cùng trình duyệt/thiết bị. Xóa dữ liệu trình duyệt hoặc đổi thiết bị có thể làm dữ liệu local không còn.
+        Nút <b>Xóa dữ liệu</b> sẽ xóa dữ liệu đã lưu và nạp lại dữ liệu mẫu.
       </li>
     </ol>
 
