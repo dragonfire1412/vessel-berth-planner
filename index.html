@@ -436,6 +436,11 @@ textarea#pasteArea{
 .image-drop .drop-title{font-weight:800;font-size:13px;margin-bottom:4px;}
 .image-drop .drop-sub{font-size:11px;color:var(--text-muted);}
 .image-preview{width:100%;max-height:220px;object-fit:contain;border:1px solid var(--border);border-radius:6px;background:#fff;margin-top:10px;}
+.image-preview-wrap{position:relative;margin-top:10px;}
+.image-preview-wrap .image-preview{margin-top:0;}
+.image-clear-btn{position:absolute;top:7px;right:7px;width:28px;height:28px;padding:0;border:1px solid rgba(255,255,255,.9);border-radius:6px;background:rgba(15,39,64,.9);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.18);z-index:2;}
+.image-clear-btn:hover{background:var(--danger);}
+.image-clear-btn svg{width:15px;height:15px;stroke:currentColor;}
 .ocr-status{font-size:12px;margin-top:9px;padding:8px 10px;border-radius:6px;background:var(--bg-sunken);color:var(--text-muted);}
 .ocr-status.loading{color:var(--accent-deep);}
 .ocr-status.error{color:var(--danger);background:var(--danger-soft);}
@@ -2033,6 +2038,7 @@ function previewRecordsTable(records, mount, onChange){
 async function runImageOCR(file, overlay, preserveRecords=null, preserveEdits=null){
   const status=overlay.querySelector("#ocrStatus");
   const preview=overlay.querySelector("#ocrImagePreview");
+  const previewWrap=overlay.querySelector("#ocrImagePreviewWrap");
   const resultMount=overlay.querySelector("#ocrResultMount");
   const applyBtn=overlay.querySelector("#applyImageImportBtn");
   const structureInfo=overlay.querySelector("#ocrStructureInfo");
@@ -2041,6 +2047,7 @@ async function runImageOCR(file, overlay, preserveRecords=null, preserveEdits=nu
   if(reOcrBtn) reOcrBtn.disabled=true;
   preview.src=await imageFileToDataURL(file);
   preview.classList.remove("hidden");
+  if(previewWrap) previewWrap.classList.remove("hidden");
   status.className="ocr-status loading";
   status.textContent="Đang phân tích cấu trúc bảng và khởi động OCR…";
   resultMount.innerHTML="";
@@ -2299,7 +2306,14 @@ function openImportModal(){
             <div class="drop-sub">hoặc click để chọn file · cũng có thể Ctrl+V screenshot</div>
             <input id="imageFileInput" type="file" accept="image/png,image/jpeg,image/webp" class="hidden">
           </div>
-          <img id="ocrImagePreview" class="image-preview hidden" alt="Source image preview">
+          <div id="ocrImagePreviewWrap" class="image-preview-wrap hidden">
+            <img id="ocrImagePreview" class="image-preview" alt="Source image preview">
+            <button class="image-clear-btn" id="clearImageBtn" type="button" title="Xóa hình hiện tại" aria-label="Xóa hình hiện tại">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/>
+              </svg>
+            </button>
+          </div>
           <div id="ocrStatus" class="ocr-status">Chưa chọn ảnh.</div><div id="ocrStructureInfo" class="ocr-structure">Chưa phân tích cấu trúc bảng.</div><div id="ocrEnvHint" class="ocr-structure hidden"></div>
           <div class="image-tools">
             <button class="btn" id="reOcrBtn" disabled>OCR lại</button>
@@ -2338,6 +2352,7 @@ function openImportModal(){
   document.body.appendChild(overlay);
   let pendingRecords=null;
   let lastImageFile=null;
+  let pendingSource=null;
   window.__VBP_OCR_MANUAL_EDITS=new Set();
   const fileInput=overlay.querySelector("#imageFileInput");
   const excelFileInput=overlay.querySelector("#excelFileInput");
@@ -2350,6 +2365,7 @@ function openImportModal(){
     autoFixRecords(records);
     pendingRecords=records;
     state._pendingImportRecords=records;
+    pendingSource=source;
     const refreshValidation=()=>{
       const current=state._pendingImportRecords||pendingRecords||[];
       const v=validateRecords(current);
@@ -2385,6 +2401,7 @@ function openImportModal(){
     window.__VBP_OCR_MANUAL_EDITS=new Set();
     await runImageOCR(file,overlay);
     pendingRecords=state._pendingImportRecords;
+    pendingSource="OCR";
   };
   drop.addEventListener("click",()=>{ fileInput.value=""; fileInput.click(); });
   fileInput.addEventListener("change",e=>handleImage(e.target.files[0]));
@@ -2395,6 +2412,53 @@ function openImportModal(){
     const item=[...(e.clipboardData?.items||[])].find(x=>x.type.startsWith("image/"));
     if(item){e.preventDefault();handleImage(item.getAsFile());}
   });
+  overlay.querySelector("#clearImageBtn").onclick=()=>{
+    const preview=overlay.querySelector("#ocrImagePreview");
+    const previewWrap=overlay.querySelector("#ocrImagePreviewWrap");
+    const envHint=overlay.querySelector("#ocrEnvHint");
+    const structure=overlay.querySelector("#ocrStructureInfo");
+    const resultMount=overlay.querySelector("#ocrResultMount");
+    const validation=overlay.querySelector("#ocrValidation");
+    const warning=overlay.querySelector("#ocrImportWarning");
+    const reOcrBtn=overlay.querySelector("#reOcrBtn");
+
+    lastImageFile=null;
+    fileInput.value="";
+    window.__VBP_OCR_MANUAL_EDITS=new Set();
+
+    if(preview) preview.src="";
+    if(previewWrap) previewWrap.classList.add("hidden");
+    if(reOcrBtn) reOcrBtn.disabled=true;
+    if(status){
+      status.className="ocr-status";
+      status.textContent="Chưa chọn ảnh.";
+    }
+    if(structure){
+      structure.className="ocr-structure";
+      structure.textContent="Chưa phân tích cấu trúc bảng.";
+    }
+    if(envHint){
+      envHint.textContent="";
+      envHint.classList.add("hidden");
+    }
+
+    // Only clear the pending dataset when it came from this image OCR.
+    // Excel/CSV work in the other panel is left untouched.
+    if(pendingSource==="OCR"){
+      pendingRecords=null;
+      delete state._pendingImportRecords;
+      if(resultMount) resultMount.innerHTML="";
+      if(validation) validation.innerHTML="";
+      if(warning){
+        warning.classList.add("hidden");
+        const cb=warning.querySelector("#ocrImportAnyway");
+        if(cb) cb.checked=false;
+      }
+      applyBtn.disabled=true;
+      pendingSource=null;
+    }
+  };
+
   overlay.querySelector("#reOcrBtn").onclick=async()=>{
     const f=lastImageFile || fileInput.files[0];
     if(!f){ status.textContent="Chưa có ảnh để OCR lại."; return; }
@@ -2488,7 +2552,7 @@ function openImportModal(){
     if(!e.target.checked) return;
     doImport();
   });
-  const close=()=>{delete state._pendingImportRecords;delete window.__VBP_OCR_MANUAL_EDITS;overlay.remove();};
+  const close=()=>{delete state._pendingImportRecords;delete window.__VBP_OCR_MANUAL_EDITS;pendingSource=null;overlay.remove();};
   overlay.querySelector(".modal-close").onclick=close;
   overlay.querySelector("#cancelImportBtn").onclick=close;
   overlay.addEventListener("click",e=>{if(e.target===overlay) close();});
