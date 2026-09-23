@@ -347,6 +347,24 @@ body.dark .tl-day-label{background:var(--navy-tint);}
    ============================================================ */
 .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;}
 @media(max-width:1100px){.two-col{grid-template-columns:1fr;}}
+.panel-head-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.panel-head-row h3{margin:0;}
+.panel-count{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);font-weight:600;}
+.vessel-controls input{flex:1;min-width:170px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 9px;background:var(--bg-panel);color:var(--text);}
+.vessel-item{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:12px;cursor:pointer;transition:.12s;}
+.vessel-item:hover{background:var(--navy-tint);border-color:var(--border-strong);transform:translateY(-1px);}
+.vessel-item.focused-vessel{outline:3px solid var(--accent);outline-offset:2px;animation:vesselFocusPulse .8s ease-in-out 2;z-index:6;}
+.tl-vessel-label.focused-vessel-label{background:var(--accent-soft);box-shadow:inset 4px 0 0 var(--accent);}
+@keyframes vesselFocusPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.16);}}
+.planning-window-item{cursor:pointer;}
+.planning-window-item:hover{background:var(--accent-soft);border-color:var(--accent);}
+.vessel-item .vi-main{flex:1;min-width:0;}
+.vessel-item .vi-name{font-weight:800;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vessel-item .vi-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--text-muted);margin-top:2px;}
+.vessel-item .vi-sub{font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vessel-item .vi-dur{font-family:var(--font-mono);font-weight:700;color:var(--accent-deep);white-space:nowrap;}
+.panel-note{font-size:11px;color:var(--text-muted);margin-top:10px;line-height:1.45;}
+.vessel-list,.barge-window-list{max-height:360px;}
 .panel{
   background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
   padding:14px;box-shadow:var(--shadow-1);
@@ -553,16 +571,6 @@ footer li{margin-bottom:3px;}
       </select>
     </div>
     <div class="control-field">
-      <label>Buffer lập kế hoạch</label>
-      <select id="bufferSelect">
-        <option value="0" selected>0h</option>
-        <option value="1">1h</option>
-        <option value="2">2h</option>
-        <option value="3">3h</option>
-        <option value="6">6h</option>
-      </select>
-    </div>
-    <div class="control-field">
       <label>Sắp xếp</label>
       <select id="sortSelect">
         <option value="arrival">Arrival</option>
@@ -591,22 +599,24 @@ footer li{margin-bottom:3px;}
   </div>
 
   <div class="two-col">
-    <div class="panel">
-      <h3>Available Windows (Khoảng trống theo lịch tàu)</h3>
-      <div class="panel-controls">
-        <select id="minDurSelect">
-          <option value="0">Tất cả</option>
-          <option value="2">&ge; 2h</option>
-          <option value="4">&ge; 4h</option>
-          <option value="6">&ge; 6h</option>
-          <option value="8">&ge; 8h</option>
-          <option value="12">&ge; 12h</option>
-        </select>
+    <div class="panel vessel-panel">
+      <div class="panel-head-row">
+        <h3>Vessels / Lịch tàu</h3>
+        <span class="panel-count" id="vesselListCount"></span>
       </div>
-      <div class="window-list" id="windowList"></div>
+      <div class="panel-controls vessel-controls">
+        <select id="vesselTerminalSelect"></select>
+        <input type="text" id="vesselSearchInput" placeholder="🔍 Tìm tên tàu...">
+      </div>
+      <div class="window-list vessel-list" id="vesselList"></div>
+      <div class="panel-note">Chọn terminal để lọc tàu. Bấm vào một tàu để nhảy tới đúng vị trí của tàu trên Timeline.</div>
     </div>
+
     <div class="panel">
-      <h3>Barge Planning</h3>
+      <div class="panel-head-row">
+        <h3>Barge Planning</h3>
+        <span class="panel-count" id="bargeWindowCount"></span>
+      </div>
       <div id="nextWindowSlot"></div>
       <div class="panel-controls">
         <select id="bpTerminalSelect"></select>
@@ -614,14 +624,21 @@ footer li{margin-bottom:3px;}
           <option value="0">Min: tất cả</option>
           <option value="2">Min: &ge; 2h</option>
           <option value="4">Min: &ge; 4h</option>
-          <option value="6" selected>Min: &ge; 6h</option>
+          <option value="6">Min: &ge; 6h</option>
           <option value="8">Min: &ge; 8h</option>
           <option value="12">Min: &ge; 12h</option>
         </select>
+        <select id="bufferSelect" title="Thời gian đệm trừ ở cả đầu và cuối Free Window">
+          <option value="0" selected>Buffer: 0h</option>
+          <option value="1">Buffer: 1h</option>
+          <option value="2">Buffer: 2h</option>
+          <option value="3">Buffer: 3h</option>
+          <option value="6">Buffer: 6h</option>
+        </select>
       </div>
-      <div class="window-list" id="bargeList"></div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:10px;">
-        Đây chỉ là <b>PLANNING WINDOW</b> — khoảng thời gian terminal không có tàu theo dữ liệu lịch tàu. Không suy ra rằng sà lan chắc chắn có thể vào làm hàng trong khoảng này; việc khai thác thực tế còn phụ thuộc điều kiện cầu bến, thiết bị và nhân lực.
+      <div class="window-list barge-window-list" id="bargeList"></div>
+      <p class="panel-note">
+        <b>Planning Window</b> = Free Window sau khi áp dụng Buffer. Buffer mặc định <b>0h</b>; chỉ khi người dùng chọn Buffer thì app mới chừa thời gian đệm ở cả đầu và cuối. Đây là khoảng trống theo lịch tàu, không phải cam kết cầu bến.
       </p>
     </div>
   </div>
@@ -1028,7 +1045,9 @@ const state = {
   buffer: 0,
   minDur: 0,
   bpTerminal: "ALL",
-  bpMinDur: 6,
+  bpMinDur: 0,
+  vesselTerminal: "ALL",
+  vesselSearch: "",
   dark: false
 };
 const PPH_BASE = 18; // px per hour at 100% zoom — ~3 days visible in a normal desktop viewport
@@ -1247,10 +1266,17 @@ function renderTerminalChips(){
     chip.onclick = ()=>{ state.terminal=t; renderAll(); };
     wrap.appendChild(chip);
   });
-  // barge planning terminal select
+  // Barge planning terminal select
   const bpSel = document.getElementById("bpTerminalSelect");
   bpSel.innerHTML = `<option value="ALL">Tất cả terminal</option>` + terms.map(t=>`<option value="${t}">${t}</option>`).join("");
   bpSel.value = state.bpTerminal;
+
+  // Vessel-list terminal select
+  const vesselSel = document.getElementById("vesselTerminalSelect");
+  vesselSel.innerHTML = `<option value="ALL">Tất cả terminal</option>` + terms.map(t=>`<option value="${t}">${t}</option>`).join("");
+  vesselSel.value = state.vesselTerminal;
+  const vesselSearch = document.getElementById("vesselSearchInput");
+  if(vesselSearch && vesselSearch.value !== state.vesselSearch) vesselSearch.value = state.vesselSearch;
 }
 
 function computeWeekVessels(){
@@ -1579,6 +1605,79 @@ function renderAvailableWindows(){
   }).join("");
 }
 
+function renderVesselList(){
+  const {ws, rows} = computeWeekVessels();
+  const term = state.vesselTerminal;
+  const q = state.vesselSearch.trim().toLowerCase();
+  let vessels = rows.filter(v=>term==="ALL" || v.ter===term);
+  if(q){
+    vessels = vessels.filter(v=>
+      (v.vessel+" "+v.exvoy).toLowerCase().includes(q)
+    );
+  }
+  vessels = sortVessels(vessels);
+
+  const list=document.getElementById("vesselList");
+  const count=document.getElementById("vesselListCount");
+  if(count) count.textContent = `${vessels.length} tàu`;
+  if(!vessels.length){
+    list.innerHTML=`<div class="empty-state"><div class="es-title">NO VESSEL FOUND</div>Không có tàu phù hợp với điều kiện đang chọn.</div>`;
+    return;
+  }
+
+  list.innerHTML=vessels.map(v=>{
+    const c=vesselColor(v);
+    const dur=(v.departure-v.arrival)/3600000;
+    const status=vesselStatus(v,new Date());
+    return `<div class="vessel-item" data-vid="${v.id}" title="Bấm để xem trên Timeline">
+      <span class="status-dot ${status}" style="width:8px;height:8px;margin-right:0;"></span>
+      <div class="vi-main">
+        <div class="vi-name"><span class="vessel-key" style="background:${c.solid}"></span>${escapeHtml(v.vessel)}</div>
+        <div class="vi-meta">${escapeHtml(v.exvoy||"—")} · ${escapeHtml(v.ter||"—")} · ${fmtDur(dur)}</div>
+        <div class="vi-sub">${fmtDateShort(v.arrival)} → ${fmtDateShort(v.departure)}</div>
+      </div>
+      <div class="vi-dur">${fmtDur(dur)}</div>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll(".vessel-item").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const v=state.data.find(x=>x.id===el.dataset.vid);
+      if(v) jumpToVesselOnTimeline(v);
+    });
+  });
+}
+
+function jumpToVesselOnTimeline(v){
+  state.terminal=v.ter;
+  renderAll();
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const scroll=document.getElementById("timelineScroll");
+      if(!scroll) return;
+      const target=scroll.querySelector(`.vessel-bar[data-vid="${v.id}"]`);
+      const label=scroll.querySelector(`.tl-vessel-label[data-vid="${v.id}"]`);
+      const el=target||label;
+      if(!el) return;
+
+      if(target) target.classList.add("focused-vessel");
+      if(label) label.classList.add("focused-vessel-label");
+
+      const sr=scroll.getBoundingClientRect();
+      const er=el.getBoundingClientRect();
+      const targetLeft=scroll.scrollLeft+(er.left-sr.left);
+      const targetWidth=er.width||0;
+      const desired=Math.max(0,targetLeft-Math.max(70,(sr.width-targetWidth)/2));
+      scroll.scrollTo({left:desired,behavior:"smooth"});
+
+      setTimeout(()=>{
+        target?.classList.remove("focused-vessel");
+        label?.classList.remove("focused-vessel-label");
+      },2200);
+    });
+  });
+}
+
 function renderBargePlanning(){
   const {ws, we, rows} = computeWeekVessels();
   let terms = state.bpTerminal==="ALL" ? getTerminals() : [state.bpTerminal];
@@ -1654,15 +1753,18 @@ function renderBargePlanning(){
     nowSlot.innerHTML = "";
   }
 
+  const count=document.getElementById("bargeWindowCount");
+  if(count) count.textContent = `${allWindows.length} planning windows`;
+
   const list = document.getElementById("bargeList");
   if(allWindows.length===0){
     list.innerHTML = `<div class="empty-state"><div class="es-title">NO AVAILABLE WINDOW</div>Không có planning window nào thoả điều kiện.</div>`;
     return;
   }
-  list.innerHTML = allWindows.map(w=>{
+  list.innerHTML = allWindows.map((w,i)=>{
     const c = terminalColor(w.term);
     const dur = windowDurationHours(w,true);
-    return `<div class="window-item">
+    return `<div class="window-item planning-window-item" data-fw-start="${w.start.toISOString()}" data-fw-end="${w.end.toISOString()}" data-term="${escapeHtml(w.term)}" title="Bấm để xem trên Timeline">
         <span class="wi-term-dot" style="background:${c.dot}"></span>
         <div class="wi-main">
           <div class="wi-range">${w.term} — ${fmtDateShort(w.bufStart)} \u2192 ${fmtDateShort(w.bufEnd)}</div>
@@ -1671,6 +1773,35 @@ function renderBargePlanning(){
         <div class="wi-dur">${fmtDur(dur)}</div>
       </div>`;
   }).join("");
+
+  list.querySelectorAll(".planning-window-item").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const term=el.dataset.term;
+      const start=new Date(el.dataset.fwStart);
+      const end=new Date(el.dataset.fwEnd);
+      jumpToFreeWindowOnTimeline(term,start,end);
+    });
+  });
+}
+
+function jumpToFreeWindowOnTimeline(term,start,end){
+  state.terminal=term;
+  renderAll();
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const scroll=document.getElementById("timelineScroll");
+      if(!scroll) return;
+      const target=[...scroll.querySelectorAll(".free-window")].find(el=>el.dataset.start===start.toISOString() && el.dataset.end===end.toISOString());
+      if(target){
+        target.classList.add("focused-window");
+        const sr=scroll.getBoundingClientRect(), tr=target.getBoundingClientRect();
+        const targetLeft=scroll.scrollLeft+(tr.left-sr.left);
+        const desired=Math.max(0,targetLeft-Math.max(70,(sr.width-tr.width)/2));
+        scroll.scrollTo({left:desired,behavior:"smooth"});
+        setTimeout(()=>target.classList.remove("focused-window"),2200);
+      }
+    });
+  });
 }
 
 /* ============================================================
@@ -3074,9 +3205,15 @@ function bindEvents(){
   document.getElementById("zoomSelect").onchange = (e)=>{ state.zoom = parseFloat(e.target.value); renderTimeline(); };
   document.getElementById("bufferSelect").onchange = (e)=>{ state.buffer = parseFloat(e.target.value); renderAll(); };
   document.getElementById("sortSelect").onchange = (e)=>{ state.sortBy = e.target.value; renderTimeline(); };
-  document.getElementById("minDurSelect").onchange = (e)=>{ state.minDur = parseFloat(e.target.value); renderTimeline(); renderAvailableWindows(); };
   document.getElementById("bpTerminalSelect").onchange = (e)=>{ state.bpTerminal = e.target.value; renderBargePlanning(); };
   document.getElementById("bpMinDurSelect").onchange = (e)=>{ state.bpMinDur = parseFloat(e.target.value); renderBargePlanning(); };
+  document.getElementById("bufferSelect").onchange = (e)=>{ state.buffer = parseFloat(e.target.value); renderBargePlanning(); };
+  document.getElementById("vesselTerminalSelect").onchange = (e)=>{ state.vesselTerminal = e.target.value; renderVesselList(); };
+  let vesselSearchDebounce;
+  document.getElementById("vesselSearchInput").oninput = (e)=>{
+    clearTimeout(vesselSearchDebounce);
+    vesselSearchDebounce = setTimeout(()=>{ state.vesselSearch = e.target.value; renderVesselList(); }, 150);
+  };
   let searchDebounce;
   document.getElementById("searchInput").oninput = (e)=>{
     clearTimeout(searchDebounce);
@@ -3111,7 +3248,7 @@ function renderAll(){
   renderTerminalChips();
   renderSummaryCards();
   renderTimeline();
-  renderAvailableWindows();
+  renderVesselList();
   renderBargePlanning();
 }
 
