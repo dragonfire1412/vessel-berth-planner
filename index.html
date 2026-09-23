@@ -1332,10 +1332,11 @@ function renderTimelineForTerminalCombined(term, vessels, ws, we, dayWidth){
   const now = new Date();
   const scheduleRows = getScheduleData().filter(r=>r.departure > ws && r.arrival < we && r.ter===term);
   const overlapMap = computeOverlapMap(vessels);
-  const {laneOf, laneCount} = assignLanes(vessels);
   const c = terminalColor(term);
-  const byLane = Array.from({length:laneCount},()=>[]);
-  vessels.forEach(v=> byLane[laneOf[v.id]].push(v));
+
+  // One vessel = one visual row. This keeps the frozen left column aligned
+  // with the timeline even when vessels on the same terminal are sequential.
+  const sortedVessels = [...vessels].sort((a,b)=>a.arrival-b.arrival || a.departure-b.departure);
 
   let leftHtml = `<div class="tl-term-row">
       <span class="term-dot" style="background:${c.dot}"></span>
@@ -1344,22 +1345,18 @@ function renderTimelineForTerminalCombined(term, vessels, ws, we, dayWidth){
     </div>`;
   let rightHtml = `<div class="tl-term-row-right" style="width:${dayWidth*7}px">${renderGridlines(ws)}</div>`;
 
-  byLane.forEach(laneVessels=>{
-    laneVessels.sort((a,b)=>a.arrival-b.arrival);
-    const namesHtml = laneVessels.map(v=>{
-      const vc=vesselColor(v);
-      const status=vesselStatus(v,now);
-      const dur=(v.departure-v.arrival)/3600000;
-      return `<div class="tl-vessel-label" data-vid="${v.id}">
+  sortedVessels.forEach(v=>{
+    const vc=vesselColor(v);
+    const status=vesselStatus(v,now);
+    const dur=(v.departure-v.arrival)/3600000;
+    const labelHtml = `<div class="tl-vessel-label" data-vid="${v.id}">
         <div class="vname" style="font-size:12.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          <span class="vessel-key" style="background:${vc.solid}"></span><span class="status-dot ${status}"></span>${v.vessel}
+          <span class="vessel-key" style="background:${vc.solid}"></span><span class="status-dot ${status}"></span><span class="vessel-label-name">${v.vessel}</span>
         </div>
         <div class="vmeta" style="font-size:11.5px;color:var(--text-muted);font-family:var(--font-mono);">${v.exvoy||"—"} · ${fmtDur(dur)}</div>
       </div>`;
-    }).join("");
-    let barsHtml = "";
-    laneVessels.forEach(v=>{ barsHtml += buildVesselBarHtml(v, ws, we, overlapMap); });
-    leftHtml += `<div class="tl-vessel-row">${namesHtml||""}</div>`;
+    leftHtml += `<div class="tl-vessel-row">${labelHtml}</div>`;
+    const barsHtml = buildVesselBarHtml(v, ws, we, overlapMap);
     rightHtml += `<div class="tl-vessel-row"><div class="lane-track" style="width:${dayWidth*7}px">${renderGridlines(ws)}${barsHtml}</div></div>`;
   });
 
@@ -1372,93 +1369,6 @@ function renderTimelineForTerminalCombined(term, vessels, ws, we, dayWidth){
 
   return {leftHtml,rightHtml};
 }
-
-function renderOverviewCards(ws, we, rows){
-  const terms = getTerminals();
-  let html = `<div class="overview-grid">`;
-  terms.forEach(t=>{
-    const tv = rows.filter(r=>r.ter===t);
-    const {windows} = computeFreeWindows(tv, ws, we);
-    const c = terminalColor(t);
-    const sorted = [...tv].sort((a,b)=>a.arrival-b.arrival);
-    const now = new Date();
-    const nextArr = sorted.find(v=>v.arrival>=now);
-    html += `<div class="overview-card" data-term="${t}">
-        <div class="oc-head"><span class="term-dot" style="background:${c.dot}"></span><span class="oc-title">${t}</span></div>
-        <div class="oc-row"><span>Vessels tuần này</span><b>${tv.length}</b></div>
-        <div class="oc-row"><span>Free windows</span><b>${windows.length}</b></div>
-        <div class="oc-row"><span>Next arrival</span><b>${nextArr? fmtDateShort(nextArr.arrival) : "—"}</b></div>
-      </div>`;
-  });
-  html += `</div>`;
-  return html;
-}
-
-function renderTimeline(){
-  const scroll = document.getElementById("timelineScroll");
-  const {ws, we, rows} = computeWeekVessels();
-  const {dayWidth} = renderTimelineHeader(ws);
-  const hint = document.getElementById("overviewHint");
-
-  if(state.terminal==="ALL"){
-    hint.textContent = "Chế độ tổng quan — bấm vào 1 terminal để xem timeline chi tiết";
-    scroll.innerHTML = `<div style="width:100%;padding:16px;">${renderOverviewCards(ws,we,rows)}</div>`;
-    scroll.querySelectorAll(".overview-card").forEach(card=>{
-      card.onclick = ()=>{ state.terminal = card.dataset.term; renderAll(); };
-    });
-    return;
-  }
-  hint.textContent = "";
-  const sortedRows = sortVessels(rows.filter(r=>r.ter===state.terminal));
-  const {daysHtml} = renderTimelineHeader(ws);
-  const nowInWeek = new Date() >= ws && new Date() < we;
-  const nowLeft = nowInWeek ? timeToX(new Date(), ws) : null;
-
-  let leftBody = "";
-  let rightBody = "";
-  if(sortedRows.length===0){
-    leftBody = `<div class="tl-vessel-row"><div class="tl-vessel-label" style="color:var(--text-faint);font-size:12px;">—</div></div>`;
-    rightBody = `<div class="tl-vessel-row"><div class="lane-track" style="width:${dayWidth*7}px;min-height:160px;"><div style="position:absolute;left:16px;top:16px;color:var(--text-faint);font-size:12.5px;">NO VESSEL SCHEDULED</div></div></div>`;
-  } else {
-    const rendered = renderTimelineForTerminalCombined(state.terminal, sortedRows, ws, we, dayWidth);
-    leftBody = rendered.leftHtml;
-    rightBody = rendered.rightHtml;
-  }
-
-  scroll.innerHTML = `
-    <div class="tl-left">
-      <div class="tl-left-head">Terminal / Vessel / EXVOY</div>
-      <div class="tl-left-body">${leftBody}</div>
-    </div>
-    <div class="tl-right">
-      <div class="tl-days-row">${daysHtml}</div>
-      <div style="position:sticky;top:64px;z-index:4;background:var(--bg-panel);border-bottom:1px solid var(--border);">${renderHoursRow(dayWidth)}</div>
-      <div class="tl-body" style="position:relative;">
-        ${nowInWeek? `<div class="now-marker" style="left:${nowLeft}px;"><div class="now-tag">NOW</div></div>` : ""}
-        ${rightBody}
-      </div>
-    </div>
-  `;
-
-  // Bind vessel clicks to both the left labels and timeline bars.
-  scroll.querySelectorAll(".vessel-bar,.tl-vessel-label").forEach(el=>{
-    el.addEventListener("click", ()=>{
-      const v = state.data.find(x=>x.id===el.dataset.vid);
-      if(v) openDetail(v);
-    });
-  });
-  scroll.querySelectorAll(".vessel-bar,.tl-vessel-label").forEach(el=>{
-    el.addEventListener("mouseenter", showVesselTooltip);
-    el.addEventListener("mousemove", showVesselTooltip);
-    el.addEventListener("mouseleave", hideTooltip);
-  });
-  scroll.querySelectorAll(".free-window").forEach(el=>{
-    el.addEventListener("mouseenter", showFreeTooltip);
-    el.addEventListener("mousemove", showFreeTooltip);
-    el.addEventListener("mouseleave", hideTooltip);
-  });
-}
-
 
 function renderAvailableWindows(){
   const {ws, we, rows} = computeWeekVessels();
