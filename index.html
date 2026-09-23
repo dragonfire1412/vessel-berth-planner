@@ -2822,41 +2822,49 @@ function exportTimelineExcel(){
 
   terminals.forEach(term=>{
     const tv=sorted.filter(v=>v.ter===term && v.departure>ws && v.arrival<we);
+    if(!tv.length) return;
+
+    // Terminal group row — mirrors the web Timeline group header.
+    const tr=new Array(totalCols).fill("");
+    tr[0]="●  "+term+"   "+tv.length+" tàu";
+    aoa.push(tr);
+    const tri=aoa.length-1;
+    merges.push({s:{r:tri,c:0},e:{r:tri,c:2}});
+    rowInfo.push({row:tri,terminal:true,term});
+
+    // One vessel per row, with the identity shown in the frozen left block.
     tv.forEach(v=>{
       const row=new Array(totalCols).fill("");
-      row[0]=term;
-      row[1]=v.vessel;
-      row[2]=v.exvoy;
+      row[0]=v.vessel;
+      row[1]=v.exvoy||"—";
+      row[2]=durationText(v);
       const [startSlot,endSlot]=getActiveRange(v);
-      for(let i=startSlot;i<=endSlot;i++){
-        const ss=slotDate(i), ee=new Date(ss.getTime()+slotHours*3600000);
-        if(overlapActive(v,ss,ee)) row[3+i]="";
-      }
-      // Put the vessel information inside the visual berth bar, matching the app timeline.
-      row[3+startSlot]=`${v.vessel}\n${v.exvoy}  •  ${durationText(v)}`;
+      row[3+startSlot]=v.vessel+"\\n"+(v.exvoy||"")+"  •  "+durationText(v);
       aoa.push(row);
-      rowInfo.push({row:aoa.length-1,v,startCol:3+startSlot,endCol:3+endSlot});
+      const ri=aoa.length-1;
+      rowInfo.push({row:ri,v,startCol:3+startSlot,endCol:3+endSlot,term});
+      merges.push({s:{r:ri,c:0},e:{r:ri,c:2}});
     });
 
-    // Free-window row for this terminal. Merge each continuous free window.
+    // Free-window row, placed directly below the terminal's vessels.
     const {windows}=computeFreeWindows(tv,ws,we);
     const fr=new Array(totalCols).fill("");
-    fr[0]=term;
-    fr[1]="FREE WINDOWS";
+    fr[0]="Free windows";
     const freeRanges=[];
     windows.forEach(w=>{
       const s=Math.max(0,Math.floor((Math.max(ws,w.start)-ws)/(slotHours*3600000)));
       const e=Math.min(slotCount-1,Math.ceil((Math.min(we,w.end)-ws)/(slotHours*3600000))-1);
       if(e<s) return;
       const durationH=(w.end-w.start)/3600000;
-      const label=durationH>=1?`FREE  •  ${durationH%1?durationH.toFixed(2).replace(/0+$/,'').replace(/\.$/,''):durationH}h`:"FREE";
+      const label=durationH>=1?"Free  •  "+(durationH%1?durationH.toFixed(2).replace(/0+$/,'').replace(/\.$/,''):durationH)+"h":"Free";
       fr[3+s]=label;
       freeRanges.push({s,e});
     });
     aoa.push(fr);
-    rowInfo.push({row:aoa.length-1,free:true,freeRanges});
+    const fri=aoa.length-1;
+    merges.push({s:{r:fri,c:0},e:{r:fri,c:2}});
+    rowInfo.push({row:fri,free:true,freeRanges,term});
   });
-
   if(typeof XLSX!=="undefined"){
     const wb=XLSX.utils.book_new();
     const wsx=XLSX.utils.aoa_to_sheet(aoa);
@@ -2867,7 +2875,13 @@ function exportTimelineExcel(){
       {wch:27},
       {wch:12}
     ]).concat(Array.from({length:slotCount},()=>({wch:7.2})));
-    wsx["!rows"]=aoa.map((_,ri)=>({hpx:ri<2?28:34}));
+    wsx["!rows"]=aoa.map((_,ri)=>{
+      if(ri<2) return {hpx:28};
+      const meta=rowInfo.find(x=>x.row===ri);
+      if(meta?.terminal) return {hpx:25};
+      if(meta?.free) return {hpx:42};
+      return {hpx:48};
+    });
 
     const border={
       top:{style:"thin",color:{rgb:"D5DEE8"}},
@@ -2919,6 +2933,19 @@ function exportTimelineExcel(){
       wsx[a].s={fill:{fgColor:{rgb:"F7FAFC"}},font:{name:"Arial",sz:9,color:{rgb:"8191A5"}},alignment:{horizontal:"center",vertical:"center"},border};
     }
 
+    // Terminal group rows: match the blue-gray group header used by the web Timeline.
+    rowInfo.filter(x=>x.terminal).forEach(meta=>{
+      for(let c=0;c<totalCols;c++){
+        const a=XLSX.utils.encode_cell({r:meta.row,c});
+        wsx[a].s={
+          fill:{fgColor:{rgb:"E7EEF5"}},
+          font:{name:"Arial",sz:10,bold:true,color:{rgb:darkHeader}},
+          alignment:{horizontal:c<3?"left":"center",vertical:"center"},
+          border
+        };
+      }
+    });
+
     // Vessel rows: color only the actual berth-occupancy bar, not the identity cells.
     rowInfo.filter(x=>x.v).forEach(meta=>{
       const v=meta.v;
@@ -2927,7 +2954,7 @@ function exportTimelineExcel(){
       // Left identity cells remain white for readability.
       for(let c=0;c<3;c++){
         const a=XLSX.utils.encode_cell({r:meta.row,c});
-        wsx[a].s={fill:{fgColor:{rgb:"FFFFFF"}},font:{name:"Arial",sz:10,bold:c===1,color:{rgb:"17324D"}},alignment:{horizontal:"left",vertical:"center"},border};
+        wsx[a].s={fill:{fgColor:{rgb:"FFFFFF"}},font:{name:"Arial",sz:c===0?10:9,bold:c===0,color:{rgb:"17324D"}},alignment:{horizontal:"left",vertical:"center",wrap_text:true},border};
       }
       for(let c=meta.startCol;c<=meta.endCol;c++){
         const a=XLSX.utils.encode_cell({r:meta.row,c});
